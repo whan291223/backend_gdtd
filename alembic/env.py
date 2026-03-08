@@ -7,7 +7,8 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
 import sys
-from model.models import SQLModel
+from sqlmodel import SQLModel
+import model.models
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -86,8 +87,7 @@ def run_migrations_online() -> None:
         # Use loop_factory to explicitly create a SelectorEventLoop.
         print("Using SelectorEventLoop via loop_factory for Alembic/Psycopg compatibility on Windows...")
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-    else:
-        asyncio.run(run_async_migrations())
+    asyncio.run(run_async_migrations())
 
 
 if context.is_offline_mode():
