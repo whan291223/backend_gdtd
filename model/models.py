@@ -9,3 +9,6 @@ class User(SQLModel, table=True):
     display_name: Optional[str] = None
     picture_url: Optional[str] = None
 
+    real_name: Optional[str] = None
+    surname: Optional[str] = None
+

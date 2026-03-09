@@ -5,6 +5,7 @@ class Setting(BaseSettings):
     DATABASE_URL: str
     SECRET_KEY: str
     ALGORITHM: str
+    LIFF_ID: str
     # STRIPE_SECRET_KEY: str
     # STRIPE_SANDBOX_ACCOUNT_ID: str
     # STRIPE_WEBHOOK_SECRET: str
