@@ -3,11 +3,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
-from api import user_api
+from api import user_api, spent_naf_api, blood_test_api
 
 app = FastAPI()
 
 app.include_router(user_api.router, prefix="/api/v0.1")
+app.include_router(spent_naf_api.router, prefix="/api/v0.1")
+app.include_router(blood_test_api.router, prefix="/api/v0.1")
+
 
 origins = [
     "http://localhost:5173",

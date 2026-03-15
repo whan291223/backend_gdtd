@@ -45,3 +45,14 @@ class SpentNafScore(SQLModel, table=True):
     submitted_at: Optional[datetime] = Field(
         default_factory=lambda: datetime.now(timezone.utc)
     )
+
+class BloodTest(SQLModel, table=True):
+ 
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(index=True)
+    blood_level: int
+    note: Optional[str] = Field(default=None)
+    recorded_at: Optional[datetime] = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
+ 
