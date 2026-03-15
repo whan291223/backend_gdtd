@@ -56,3 +56,19 @@ class BloodTest(SQLModel, table=True):
         default_factory=lambda: datetime.now(timezone.utc)
     )
  
+class FoodLog(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(index=True)
+    food_name: str
+    calories: int
+    meal_category: str = Field(default="Snack")  # Breakfast | Lunch | Dinner | Snack
+    eaten_date: Optional[datetime] = Field(default_factory=lambda: datetime.now(timezone.utc).date())
+    created_at: Optional[datetime] = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
+ 
+ 
+class DailyCalorieGoal(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(index=True, unique=True)
+    daily_goal: int = Field(default=2000)
