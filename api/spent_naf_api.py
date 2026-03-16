@@ -54,7 +54,7 @@ async def submit_naf(
 
     record = await update_naf_answers(session, record, payload.answers, naf_score)
     return NafSubmitResponse(
-        test_session_id=record.id,
+        session_id=record.id,
         naf_score=record.naf_score,
         status=record.status,
     )

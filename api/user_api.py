@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel.ext.asyncio.session import AsyncSession
 from schema.user_schema import UserCreate, UserUpdate
-from crud.crud_user import get_user_by_line_id, create_user, update_real_name
+from crud.crud_user import get_user_by_line_id, create_user, update_user_profile
 from core.db import get_session
 from fastapi.responses import JSONResponse
 from core.config import settings
@@ -45,4 +45,4 @@ async def update_user(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    return await update_real_name(session, user, user_update.real_name)
+    return await update_user_profile(session, user, user_update)
