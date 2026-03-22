@@ -1,6 +1,6 @@
 from typing import List, Optional
 from sqlmodel import Field, SQLModel,Column
-from sqlalchemy import ARRAY, Integer
+from sqlalchemy import ARRAY, Integer, String
 
 from datetime import datetime, timezone
 from enum import Enum
@@ -72,3 +72,36 @@ class DailyCalorieGoal(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(index=True, unique=True)
     daily_goal: int = Field(default=2000)
+
+class PatientProfile(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+
+    user_id: int = Field(index=True, foreign_key="user.id")
+
+    # --- Basic info ---
+    first_name: str
+    last_name: str
+    age: int
+    gender: str
+    phone: str
+
+    # --- Health ---
+    height: float
+    weight: float
+    bmi: Optional[float] = None
+    blood_pressure: str
+
+    # --- Diseases ---
+    existing_diseases: List[str] = Field(
+        default=[],
+        sa_column=Column(ARRAY(String), nullable=True)
+    )
+
+    # --- Lifestyle ---
+    smoking: str
+    alcohol: str
+    activity_level: str
+
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
