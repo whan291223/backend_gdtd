@@ -1,106 +1,92 @@
+from sqlmodel import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from datetime import datetime, date, timezone
-from model.models import FoodLog, DailyCalorieGoal
-from schema.food_log_schema import FoodLogCreate, FoodLogUpdate, DailyCalorieGoalUpdate
-from typing import Optional, List
+from model.models import FoodLog, ExerciseLog, DailyCalorieGoal
+from schema.food_log_schema import FoodLogCreate, ExerciseLogCreate, DailyCalorieGoalUpdate
+from typing import List
 
-# ── Food log ──────────────────────────────────────────────────────
+# --- Food Log ----------------------------------------------------------------
 
-async def create_food_log(
-    db: AsyncSession,
-    payload: FoodLogCreate,
-) -> FoodLog:
-    record = FoodLog(
-        user_id=payload.user_id,
-        food_name=payload.food_name,
-        calories=payload.calories,
-        meal_category=payload.meal_category,
-        eaten_date=payload.eaten_date or datetime.now(timezone.utc).date(),
-    )
-    db.add(record)
-    await db.commit()
-    await db.refresh(record)
-    return record
+async def add_food_log(session: AsyncSession, user_id: int, data: FoodLogCreate) -> FoodLog:
+    entry = FoodLog(user_id=user_id, **data.model_dump())
+    session.add(entry)
+    await session.commit()
+    await session.refresh(entry)
+    return entry
 
 
-async def get_food_log_record(
-    db: AsyncSession,
-    record_id: int,
-) -> Optional[FoodLog]:
-    return await db.get(FoodLog, record_id)
-
-
-async def get_food_logs_by_date(
-    db: AsyncSession,
-    user_id: int,
-    target_date: date,
-) -> List[FoodLog]:
-    result = await db.execute(
+async def get_food_logs_by_date(session: AsyncSession, user_id: int, date: str) -> List[FoodLog]:
+    result = await session.execute(
         select(FoodLog)
-        .where(FoodLog.user_id == user_id)
-        .where(FoodLog.eaten_date == target_date)
-        .order_by(FoodLog.created_at.asc())
+        .where(FoodLog.user_id == user_id, FoodLog.eaten_date == date)
+        .order_by(FoodLog.created_at)
     )
-    return result.scalars().all()
+    return list(result.scalars().all())
 
 
-async def get_all_food_logs_by_user(
-    db: AsyncSession,
-    user_id: int,
-) -> List[FoodLog]:
-    result = await db.execute(
-        select(FoodLog)
-        .where(FoodLog.user_id == user_id)
-        .order_by(FoodLog.eaten_date.desc(), FoodLog.created_at.asc())
+async def delete_food_log(session: AsyncSession, entry_id: int, user_id: int) -> bool:
+    result = await session.execute(
+        select(FoodLog).where(FoodLog.id == entry_id, FoodLog.user_id == user_id)
     )
-    return result.scalars().all()
+    entry = result.scalar_one_or_none()
+    if not entry:
+        return False
+    await session.delete(entry)
+    await session.commit()
+    return True
 
 
-async def update_food_log_record(
-    db: AsyncSession,
-    record: FoodLog,
-    payload: FoodLogUpdate,
-) -> FoodLog:
-    record.food_name = payload.food_name
-    record.calories = payload.calories
-    record.meal_category = payload.meal_category
-    await db.commit()
-    await db.refresh(record)
-    return record
+# --- Exercise Log ------------------------------------------------------------
+
+async def add_exercise_log(session: AsyncSession, user_id: int, data: ExerciseLogCreate) -> ExerciseLog:
+    entry = ExerciseLog(user_id=user_id, **data.model_dump())
+    session.add(entry)
+    await session.commit()
+    await session.refresh(entry)
+    return entry
 
 
-async def delete_food_log_record(
-    db: AsyncSession,
-    record: FoodLog,
-) -> None:
-    await db.delete(record)
-    await db.commit()
+async def get_exercise_logs_by_date(session: AsyncSession, user_id: int, date: str) -> List[ExerciseLog]:
+    result = await session.execute(
+        select(ExerciseLog)
+        .where(ExerciseLog.user_id == user_id, ExerciseLog.logged_date == date)
+        .order_by(ExerciseLog.created_at)
+    )
+    return list(result.scalars().all())
 
 
-# ── Calorie goal ──────────────────────────────────────────────────
+async def delete_exercise_log(session: AsyncSession, entry_id: int, user_id: int) -> bool:
+    result = await session.execute(
+        select(ExerciseLog).where(ExerciseLog.id == entry_id, ExerciseLog.user_id == user_id)
+    )
+    entry = result.scalar_one_or_none()
+    if not entry:
+        return False
+    await session.delete(entry)
+    await session.commit()
+    return True
 
-async def get_calorie_goal(
-    db: AsyncSession,
-    user_id: int,
-) -> Optional[DailyCalorieGoal]:
-    result = await db.execute(
+
+# --- Daily Calorie Goal ------------------------------------------------------
+
+async def get_or_create_calorie_goal(session: AsyncSession, user_id: int) -> DailyCalorieGoal:
+    result = await session.execute(
         select(DailyCalorieGoal).where(DailyCalorieGoal.user_id == user_id)
     )
-    return result.scalar_one_or_none()
+    goal = result.scalar_one_or_none()
+    if not goal:
+        goal = DailyCalorieGoal(user_id=user_id, daily_goal=2000)
+        session.add(goal)
+        await session.commit()
+        await session.refresh(goal)
+    return goal
 
 
-async def upsert_calorie_goal(
-    db: AsyncSession,
-    user_id: int,
-    payload: DailyCalorieGoalUpdate,
+async def update_calorie_goal(
+    session: AsyncSession, user_id: int, data: DailyCalorieGoalUpdate
 ) -> DailyCalorieGoal:
-    record = await get_calorie_goal(db, user_id)
-    if record:
-        record.daily_goal = payload.daily_goal
-    else:
-        record = DailyCalorieGoal(user_id=user_id, daily_goal=payload.daily_goal)
-        db.add(record)
-    await db.commit()
-    await db.refresh(record)
-    return record
+    goal = await get_or_create_calorie_goal(session, user_id)
+    goal.daily_goal = data.daily_goal
+    session.add(goal)
+    await session.commit()
+    await session.refresh(goal)
+    return goal

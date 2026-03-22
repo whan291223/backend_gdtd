@@ -1,52 +1,54 @@
 from pydantic import BaseModel
-from typing import Optional, List
-from datetime import datetime, date
-
-
-MEAL_CATEGORIES = ["Breakfast", "Lunch", "Dinner", "Snack"]
+from typing import Optional
+from datetime import datetime
 
 
 class FoodLogCreate(BaseModel):
-    user_id: int
     food_name: str
-    calories: int
+    calories: float
+    protein: float = 0
+    sodium: float = 0
+    potassium: float = 0
+    phosphorus: float = 0
     meal_category: str = "Snack"
-    eaten_date: Optional[date] = None  # defaults to today in crud
-
-
-class FoodLogUpdate(BaseModel):
-    food_name: str
-    calories: int
-    meal_category: str
+    eaten_date: str  # "YYYY-MM-DD"
 
 
 class FoodLogRead(BaseModel):
     id: int
     user_id: int
     food_name: str
-    calories: int
+    calories: float
+    protein: float
+    sodium: float
+    potassium: float
+    phosphorus: float
     meal_category: str
-    eaten_date: date
-    created_at: Optional[datetime] = None
+    eaten_date: str
+    created_at: Optional[datetime]
 
-    class Config:
-        from_attributes = True
+
+class ExerciseLogCreate(BaseModel):
+    exercise_name: str
+    duration_minutes: int
+    calories_burned: float
+    logged_date: str  # "YYYY-MM-DD"
+
+
+class ExerciseLogRead(BaseModel):
+    id: int
+    user_id: int
+    exercise_name: str
+    duration_minutes: int
+    calories_burned: float
+    logged_date: str
+    created_at: Optional[datetime]
 
 
 class DailyCalorieGoalRead(BaseModel):
     user_id: int
     daily_goal: int
 
-    class Config:
-        from_attributes = True
-
 
 class DailyCalorieGoalUpdate(BaseModel):
     daily_goal: int
-
-
-class DailySummary(BaseModel):
-    date: date
-    total_calories: int
-    goal: int
-    entries: List[FoodLogRead]
