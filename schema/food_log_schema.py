@@ -52,3 +52,13 @@ class DailyCalorieGoalRead(BaseModel):
 
 class DailyCalorieGoalUpdate(BaseModel):
     daily_goal: int
+
+
+class FoodLogUpdate(BaseModel):
+    food_name: Optional[str] = None
+    calories: Optional[float] = None
+    protein: Optional[float] = None
+    sodium: Optional[float] = None
+    potassium: Optional[float] = None
+    phosphorus: Optional[float] = None
+    meal_category: Optional[str] = None

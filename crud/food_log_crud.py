@@ -1,8 +1,8 @@
 from sqlmodel import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from model.models import FoodLog, ExerciseLog, DailyCalorieGoal
-from schema.food_log_schema import FoodLogCreate, ExerciseLogCreate, DailyCalorieGoalUpdate
-from typing import List
+from schema.food_log_schema import FoodLogCreate, FoodLogUpdate, ExerciseLogCreate, DailyCalorieGoalUpdate
+from typing import List, Optional
 
 # --- Food Log ----------------------------------------------------------------
 
@@ -90,3 +90,24 @@ async def update_calorie_goal(
     await session.commit()
     await session.refresh(goal)
     return goal
+
+
+async def update_food_log(
+    session: AsyncSession,
+    entry_id: int,
+    user_id: int,
+    data: FoodLogUpdate,
+) -> Optional[FoodLog]:
+    from sqlmodel import select
+    result = await session.execute(
+        select(FoodLog).where(FoodLog.id == entry_id, FoodLog.user_id == user_id)
+    )
+    entry = result.scalar_one_or_none()
+    if not entry:
+        return None
+    for field, value in data.model_dump(exclude_unset=True).items():
+        setattr(entry, field, value)
+    session.add(entry)
+    await session.commit()
+    await session.refresh(entry)
+    return entry

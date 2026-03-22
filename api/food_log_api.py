@@ -4,11 +4,13 @@ from typing import List
 from core.db import get_session
 from crud.crud_user import get_user_by_line_id
 from crud.food_log_crud import (
+    update_food_log,
     add_food_log, get_food_logs_by_date, delete_food_log,
     add_exercise_log, get_exercise_logs_by_date, delete_exercise_log,
     get_or_create_calorie_goal, update_calorie_goal,
 )
 from schema.food_log_schema import (
+    FoodLogUpdate,
     FoodLogCreate, FoodLogRead,
     ExerciseLogCreate, ExerciseLogRead,
     DailyCalorieGoalRead, DailyCalorieGoalUpdate,
@@ -44,6 +46,20 @@ async def get_food_by_date(
 ):
     user_id = await get_user_id_or_404(line_user_id, session)
     return await get_food_logs_by_date(session, user_id, date)
+
+
+@router.put("/{line_user_id}/food/{entry_id}", response_model=FoodLogRead)
+async def edit_food(
+    line_user_id: str,
+    entry_id: int,
+    data: FoodLogUpdate,
+    session: AsyncSession = Depends(get_session),
+):
+    user_id = await get_user_id_or_404(line_user_id, session)
+    entry = await update_food_log(session, entry_id, user_id, data)
+    if not entry:
+        raise HTTPException(status_code=404, detail="Food entry not found")
+    return entry
 
 
 @router.delete("/{line_user_id}/food/{entry_id}", status_code=204)
