@@ -2,30 +2,33 @@ from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
 
-# POST /test/spent — submit spent answers
+
+# POST /test/spent/{line_user_id} — user_id now comes from URL, not body
 class SpentSubmit(BaseModel):
-    user_id: int
     answers: List[int]
 
-# POST /test/naf — submit naf answers (high risk only)
+
+# PUT /test/naf/{test_session_id} — session_id now comes from URL, not body
 class NafSubmit(BaseModel):
-    session_id: int
     answers: List[int]
 
-# Response after submitting spent
+
+# Response after submitting SPENT
 class SpentSubmitResponse(BaseModel):
     session_id: int
     spent_score: int
     is_high_risk: bool
     status: str
 
-# Response after submitting naf
+
+# Response after submitting NAF
 class NafSubmitResponse(BaseModel):
     session_id: int
     naf_score: int
     status: str
 
-# Full session record (for history page)
+
+# Full session record (for history / result pages)
 class SpentNafScoreRead(BaseModel):
     id: int
     user_id: int
