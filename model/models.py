@@ -1,6 +1,7 @@
 from typing import List, Optional, Dict, Any
 from sqlmodel import Field, SQLModel, Column
-from sqlalchemy import ARRAY, Integer, String, JSON
+from sqlalchemy import ARRAY, Integer, String, Text, JSON
+from sqlalchemy.dialects.postgresql import ARRAY as PG_ARRAY
 
 from datetime import datetime, timezone
 
@@ -67,11 +68,27 @@ class BloodTest(SQLModel, table=True):
 
 class FoodLog(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(index=True)
+    user_id: int = Field(index=True, foreign_key="user.id")
     food_name: str
-    calories: int
-    meal_category: str = Field(default="Snack")
-    eaten_date: Optional[datetime] = Field(default_factory=lambda: datetime.now(timezone.utc).date())
+    calories: float = Field(default=0)
+    protein: float = Field(default=0)       # g
+    sodium: float = Field(default=0)        # mg
+    potassium: float = Field(default=0)     # mg
+    phosphorus: float = Field(default=0)    # mg
+    meal_category: str = Field(default="Snack")  # Breakfast | Lunch | Dinner | Snack
+    eaten_date: str = Field(default_factory=lambda: datetime.now(timezone.utc).strftime("%Y-%m-%d"))
+    created_at: Optional[datetime] = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
+
+
+class ExerciseLog(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(index=True, foreign_key="user.id")
+    exercise_name: str
+    duration_minutes: int
+    calories_burned: float
+    logged_date: str = Field(default_factory=lambda: datetime.now(timezone.utc).strftime("%Y-%m-%d"))
     created_at: Optional[datetime] = Field(
         default_factory=lambda: datetime.now(timezone.utc)
     )
@@ -79,7 +96,7 @@ class FoodLog(SQLModel, table=True):
 
 class DailyCalorieGoal(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(index=True, unique=True)
+    user_id: int = Field(index=True, unique=True, foreign_key="user.id")
     daily_goal: int = Field(default=2000)
 
 
@@ -102,7 +119,7 @@ class PatientProfile(SQLModel, table=True):
     # ✅ Use PG_ARRAY(Text) — avoids the VARCHAR[] cast compile error
     existing_diseases: List[str] = Field(
         default=[],
-        sa_column=Column(ARRAY(String), nullable=True)
+        sa_column=Column(PG_ARRAY(Text), nullable=True)
     )
 
     smoking: str
