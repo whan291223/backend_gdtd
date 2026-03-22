@@ -2,68 +2,53 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 from core.db import get_session
+from crud.crud_user import get_user_by_line_id
 from crud.blood_test_crud import (
     create_blood_test,
-    get_blood_test_record,
-    get_blood_tests_by_user,
-    update_blood_test_record,
-    delete_blood_test_record,
+    get_latest_blood_test,
+    get_blood_test_history,
 )
-from schema.blood_test_schema import BloodTestCreate, BloodTestUpdate, BloodTestRead
+from schema.blood_test_schema import BloodTestCreate, BloodTestRead
 
-router = APIRouter(prefix="/blood-test", tags=["blood-test"])
+router = APIRouter(prefix="/blood-test", tags=["BloodTest"])
 
 
-# ── CREATE ────────────────────────────────────────────────────────
-@router.post("", response_model=BloodTestRead)
+async def get_user_id_or_404(line_user_id: str, session: AsyncSession) -> int:
+    user = await get_user_by_line_id(session, line_user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail=f"User '{line_user_id}' not found")
+    return user.id
+
+
+# POST — record new blood test results
+@router.post("/{line_user_id}", response_model=BloodTestRead)
 async def add_blood_test(
-    payload: BloodTestCreate,
-    db: AsyncSession = Depends(get_session),
+    line_user_id: str,
+    data: BloodTestCreate,
+    session: AsyncSession = Depends(get_session),
 ):
-    return await create_blood_test(db, payload)
+    user_id = await get_user_id_or_404(line_user_id, session)
+    return await create_blood_test(session, user_id, data)
 
 
-# ── READ: all records for a user ──────────────────────────────────
-@router.get("/history/{user_id}", response_model=List[BloodTestRead])
-async def get_blood_test_history(
-    user_id: int,
-    db: AsyncSession = Depends(get_session),
+# GET latest — for pre-filling the form
+@router.get("/{line_user_id}/latest", response_model=BloodTestRead)
+async def read_latest(
+    line_user_id: str,
+    session: AsyncSession = Depends(get_session),
 ):
-    return await get_blood_tests_by_user(db, user_id)
-
-
-# ── READ: single record ───────────────────────────────────────────
-@router.get("/{record_id}", response_model=BloodTestRead)
-async def get_blood_test(
-    record_id: int,
-    db: AsyncSession = Depends(get_session),
-):
-    record = await get_blood_test_record(db, record_id)
+    user_id = await get_user_id_or_404(line_user_id, session)
+    record = await get_latest_blood_test(session, user_id)
     if not record:
-        raise HTTPException(status_code=404, detail="Record not found")
+        raise HTTPException(status_code=404, detail="No blood test records found")
     return record
 
 
-# ── UPDATE ────────────────────────────────────────────────────────
-@router.put("/{record_id}", response_model=BloodTestRead)
-async def update_blood_test(
-    record_id: int,
-    payload: BloodTestUpdate,
-    db: AsyncSession = Depends(get_session),
+# GET history — all past records
+@router.get("/{line_user_id}/history", response_model=List[BloodTestRead])
+async def read_history(
+    line_user_id: str,
+    session: AsyncSession = Depends(get_session),
 ):
-    record = await get_blood_test_record(db, record_id)
-    if not record:
-        raise HTTPException(status_code=404, detail="Record not found")
-    return await update_blood_test_record(db, record, payload)
-
-
-# ── DELETE ────────────────────────────────────────────────────────
-@router.delete("/{record_id}", status_code=204)
-async def delete_blood_test(
-    record_id: int,
-    db: AsyncSession = Depends(get_session),
-):
-    record = await get_blood_test_record(db, record_id)
-    if not record:
-        raise HTTPException(status_code=404, detail="Record not found")
-    await delete_blood_test_record(db, record)
+    user_id = await get_user_id_or_404(line_user_id, session)
+    return await get_blood_test_history(session, user_id)

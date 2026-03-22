@@ -4,22 +4,31 @@ from datetime import datetime
 
 
 class BloodTestCreate(BaseModel):
-    user_id: int
-    blood_level: int
-    note: Optional[str] = None
-
-
-class BloodTestUpdate(BaseModel):
-    blood_level: int
-    note: Optional[str] = None
+    serum_albumin:  Optional[float] = None
+    npcr:           Optional[float] = None
+    bun:            Optional[float] = None
+    creatinine:     Optional[float] = None
+    cholesterol:    Optional[float] = None
+    hemoglobin:     Optional[float] = None
+    hematocrit:     Optional[float] = None
+    potassium:      Optional[float] = None
+    phosphorus:     Optional[float] = None
+    bicarbonate:    Optional[float] = None
+    note:           Optional[str]   = None
 
 
 class BloodTestRead(BaseModel):
     id: int
     user_id: int
-    blood_level: int
-    note: Optional[str] = None
-    recorded_at: Optional[datetime] = None
-
-    class Config:
-        from_attributes = True
+    serum_albumin:  Optional[float]
+    npcr:           Optional[float]
+    bun:            Optional[float]
+    creatinine:     Optional[float]
+    cholesterol:    Optional[float]
+    hemoglobin:     Optional[float]
+    hematocrit:     Optional[float]
+    potassium:      Optional[float]
+    phosphorus:     Optional[float]
+    bicarbonate:    Optional[float]
+    note:           Optional[str]
+    recorded_at:    Optional[datetime]
