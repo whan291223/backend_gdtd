@@ -129,3 +129,13 @@ class PatientProfile(SQLModel, table=True):
     updated_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc)
     )
+
+
+class FoodDatabase(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str = Field(index=True, unique=True)
+    calories: float = Field(default=0)
+    protein: float = Field(default=0)    # g
+    sodium: float = Field(default=0)     # mg
+    potassium: float = Field(default=0)  # mg
+    phosphorus: float = Field(default=0) # mg
