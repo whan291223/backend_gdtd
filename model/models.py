@@ -1,9 +1,9 @@
-from typing import List, Optional
-from sqlmodel import Field, SQLModel,Column
-from sqlalchemy import ARRAY, Integer, String
+from typing import List, Optional, Dict, Any
+from sqlmodel import Field, SQLModel, Column
+from sqlalchemy import ARRAY, Integer, String, JSON
 
 from datetime import datetime, timezone
-from enum import Enum
+
 
 class User(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -21,83 +21,90 @@ class SpentNafScore(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: Optional[int] = Field(default=None)
 
-    # --- Page 1: Spent answers ---
+    # SPENT: store raw 0/1 per question — scoring done server-side
     user_answer_spent: List[int] = Field(
         default=[],
         sa_column=Column(ARRAY(Integer), nullable=True)
     )
     spent_score: Optional[int] = Field(default=None)
 
-    # --- Routing decision ---
     is_high_risk: Optional[bool] = Field(default=None)
 
-    # --- Page 2: NAF answers (only if high risk) ---
-    user_answer_naf: List[int] = Field(
-        default=[],
-        sa_column=Column(ARRAY(Integer), nullable=True)
+    # NAF: store structured form answers as JSON — scoring done server-side
+    user_answer_naf: Optional[Dict[str, Any]] = Field(
+        default=None,
+        sa_column=Column(JSON, nullable=True)
     )
     naf_score: Optional[int] = Field(default=None)
 
-    # --- Session state ---
     status: str = Field(default="pending_spent")
-    # pending_spent → pending_naf → completed (skipped_naf if not high risk)
 
     submitted_at: Optional[datetime] = Field(
         default_factory=lambda: datetime.now(timezone.utc)
     )
 
+
 class BloodTest(SQLModel, table=True):
- 
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(index=True)
-    blood_level: int
+    user_id: int = Field(index=True, foreign_key="user.id")
+
+    serum_albumin:  Optional[float] = Field(default=None)   # g/dL
+    npcr:           Optional[float] = Field(default=None)   # g/kg/day
+    bun:            Optional[float] = Field(default=None)   # mg/dL
+    creatinine:     Optional[float] = Field(default=None)   # mg/dL
+    cholesterol:    Optional[float] = Field(default=None)   # mg/dL
+    hemoglobin:     Optional[float] = Field(default=None)   # g/dL
+    hematocrit:     Optional[float] = Field(default=None)   # %
+    potassium:      Optional[float] = Field(default=None)   # mEq/L
+    phosphorus:     Optional[float] = Field(default=None)   # mg/dL
+    bicarbonate:    Optional[float] = Field(default=None)   # mEq/L
+
     note: Optional[str] = Field(default=None)
     recorded_at: Optional[datetime] = Field(
         default_factory=lambda: datetime.now(timezone.utc)
     )
- 
+
+
 class FoodLog(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(index=True)
     food_name: str
     calories: int
-    meal_category: str = Field(default="Snack")  # Breakfast | Lunch | Dinner | Snack
+    meal_category: str = Field(default="Snack")
     eaten_date: Optional[datetime] = Field(default_factory=lambda: datetime.now(timezone.utc).date())
     created_at: Optional[datetime] = Field(
         default_factory=lambda: datetime.now(timezone.utc)
     )
- 
- 
+
+
 class DailyCalorieGoal(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(index=True, unique=True)
     daily_goal: int = Field(default=2000)
+
 
 class PatientProfile(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
     user_id: int = Field(index=True, foreign_key="user.id")
 
-    # --- Basic info ---
     first_name: str
     last_name: str
     age: int
     gender: str
     phone: str
 
-    # --- Health ---
     height: float
     weight: float
     bmi: Optional[float] = None
     blood_pressure: str
 
-    # --- Diseases ---
+    # ✅ Use PG_ARRAY(Text) — avoids the VARCHAR[] cast compile error
     existing_diseases: List[str] = Field(
         default=[],
         sa_column=Column(ARRAY(String), nullable=True)
     )
 
-    # --- Lifestyle ---
     smoking: str
     alcohol: str
     activity_level: str
