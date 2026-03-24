@@ -26,12 +26,6 @@ async def get_user_profile(line_user_id: str, session: AsyncSession = Depends(ge
     user = await get_user_by_line_id(session, line_user_id)
     return user
 
-@router.get("/{line_user_id}")
-async def is_already_in_database(line_user_id: str, session: AsyncSession = Depends(get_session)):
-    user = await get_user_by_line_id(session, line_user_id)
-    if user:
-        return True
-    return False
 
 @router.put("/{line_user_id}")
 async def update_user(
