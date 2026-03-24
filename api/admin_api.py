@@ -1,7 +1,8 @@
 from fastapi import APIRouter, HTTPException, Depends, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
-from typing import List, Set
+from typing import List, Dict
+from datetime import datetime, timedelta, timezone
 from core.db import get_session
 from core.config import settings
 from model.models import User, PatientProfile, SpentNafScore, BloodTest
@@ -19,7 +20,8 @@ import hashlib
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
-_active_tokens: Set[str] = set()
+# token -> {"username": str, "created_at": datetime}
+_active_tokens: Dict[str, dict] = {}
 
 
 # --- Auth --------------------------------------------------------------------
@@ -30,8 +32,16 @@ def _make_token(username: str) -> str:
 
 
 def verify_token(x_admin_token: str = Header(...)) -> str:
-    if x_admin_token not in _active_tokens:
-        raise HTTPException(status_code=401, detail="Invalid or expired admin token")
+    token_info = _active_tokens.get(x_admin_token)
+    if not token_info:
+        raise HTTPException(status_code=401, detail="Invalid admin token")
+
+    # Check expiration (e.g., 24 hours)
+    created_at = token_info["created_at"]
+    if datetime.now(timezone.utc) - created_at > timedelta(hours=24):
+        del _active_tokens[x_admin_token]
+        raise HTTPException(status_code=401, detail="Admin token expired")
+
     return x_admin_token
 
 
@@ -43,13 +53,17 @@ async def admin_login(payload: AdminLoginRequest):
     ):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     token = _make_token(payload.username)
-    _active_tokens.add(token)
+    _active_tokens[token] = {
+        "username": payload.username,
+        "created_at": datetime.now(timezone.utc)
+    }
     return AdminLoginResponse(token=token, username=payload.username)
 
 
 @router.post("/logout")
 async def admin_logout(token: str = Depends(verify_token)):
-    _active_tokens.discard(token)
+    if token in _active_tokens:
+        del _active_tokens[token]
     return {"message": "Logged out"}
 
 

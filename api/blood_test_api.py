@@ -4,7 +4,6 @@ from typing import List
 from core.db import get_session
 from crud.crud_user import get_user_by_line_id
 from crud.blood_test_crud import (
-    create_blood_test,
     get_latest_blood_test,
     get_blood_test_history,
 )
@@ -18,17 +17,6 @@ async def get_user_id_or_404(line_user_id: str, session: AsyncSession) -> int:
     if not user:
         raise HTTPException(status_code=404, detail=f"User '{line_user_id}' not found")
     return user.id
-
-
-# POST — record new blood test results
-@router.post("/{line_user_id}", response_model=BloodTestRead)
-async def add_blood_test(
-    line_user_id: str,
-    data: BloodTestCreate,
-    session: AsyncSession = Depends(get_session),
-):
-    user_id = await get_user_id_or_404(line_user_id, session)
-    return await create_blood_test(session, user_id, data)
 
 
 # GET latest — for pre-filling the form
