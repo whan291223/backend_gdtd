@@ -6,6 +6,8 @@ class Setting(BaseSettings):
     SECRET_KEY: str
     ALGORITHM: str
     LIFF_ID: str
+    ADMIN_USERNAME: str
+    ADMIN_PASSWORD: str
     # STRIPE_SECRET_KEY: str
     # STRIPE_SANDBOX_ACCOUNT_ID: str
     # STRIPE_WEBHOOK_SECRET: str

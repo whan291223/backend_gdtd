@@ -3,7 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
-from api import food_log_api, user_api, spent_naf_api, blood_test_api, patient_api, food_item_api
+from api import ( food_log_api, user_api, spent_naf_api, blood_test_api, patient_api, 
+                 food_item_api, admin_api)
 
 app = FastAPI()
 
@@ -13,7 +14,7 @@ app.include_router(blood_test_api.router, prefix="/api/v0.1")
 app.include_router(food_log_api.router, prefix="/api/v0.1")
 app.include_router(food_item_api.router, prefix="/api/v0.1")
 app.include_router(patient_api.router, prefix="/api/v0.1")
-
+app.include_router(admin_api.router, prefix="/api/v0.1")
 origins = [
     "http://localhost:5173",
     "localhost:5173"
