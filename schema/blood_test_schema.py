@@ -1,12 +1,9 @@
-from pydantic import BaseModel, ConfigDict
-from pydantic.alias_generators import to_camel
+from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
 
 
 class BloodTestCreate(BaseModel):
-    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
-
     serum_albumin:  Optional[float] = None
     npcr:           Optional[float] = None
     bun:            Optional[float] = None
@@ -21,8 +18,6 @@ class BloodTestCreate(BaseModel):
 
 
 class BloodTestRead(BaseModel):
-    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
-
     id: int
     user_id: int
     serum_albumin:  Optional[float]
@@ -40,8 +35,6 @@ class BloodTestRead(BaseModel):
 
 
 class BloodTestSummary(BaseModel):
-    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
-
     id: int
     serum_albumin: Optional[float]
     npcr: Optional[float]

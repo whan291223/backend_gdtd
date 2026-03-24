@@ -1,5 +1,4 @@
-from pydantic import BaseModel, ConfigDict
-from pydantic.alias_generators import to_camel
+from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
 from schema.blood_test_schema import BloodTestSummary
@@ -8,22 +7,16 @@ from schema.food_log_schema import FoodLogEntry, ExerciseLogEntry
 
 
 class AdminLoginRequest(BaseModel):
-    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
-
     username: str
     password: str
 
 
 class AdminLoginResponse(BaseModel):
-    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
-
     token: str
     username: str
 
 
 class PatientManagementRow(BaseModel):
-    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
-
     user_id: int
     line_user_id: str
     display_name: Optional[str]
@@ -47,8 +40,6 @@ class PatientManagementRow(BaseModel):
 
 
 class PatientDetail(BaseModel):
-    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
-
     # Identity
     user_id: int
     line_user_id: str
