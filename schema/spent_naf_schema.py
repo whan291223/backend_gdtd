@@ -39,3 +39,12 @@ class SpentNafScoreRead(BaseModel):
     naf_score: Optional[int]
     status: str
     submitted_at: Optional[datetime]
+
+
+class SpentNafSummary(BaseModel):
+    id: int
+    spent_score: Optional[int]
+    is_high_risk: Optional[bool]
+    naf_score: Optional[int]
+    status: str
+    submitted_at: Optional[datetime]

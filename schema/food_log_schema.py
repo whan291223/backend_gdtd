@@ -62,3 +62,25 @@ class FoodLogUpdate(BaseModel):
     potassium: Optional[float] = None
     phosphorus: Optional[float] = None
     meal_category: Optional[str] = None
+
+
+class FoodLogEntry(BaseModel):
+    id: int
+    food_name: str
+    calories: float
+    protein: float
+    sodium: float
+    potassium: float
+    phosphorus: float
+    meal_category: str
+    eaten_date: str
+    created_at: Optional[datetime]
+
+
+class ExerciseLogEntry(BaseModel):
+    id: int
+    exercise_name: str
+    duration_minutes: int
+    calories_burned: float
+    logged_date: str
+    created_at: Optional[datetime]

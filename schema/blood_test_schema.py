@@ -32,3 +32,19 @@ class BloodTestRead(BaseModel):
     bicarbonate:    Optional[float]
     note:           Optional[str]
     recorded_at:    Optional[datetime]
+
+
+class BloodTestSummary(BaseModel):
+    id: int
+    serum_albumin: Optional[float]
+    npcr: Optional[float]
+    bun: Optional[float]
+    creatinine: Optional[float]
+    cholesterol: Optional[float]
+    hemoglobin: Optional[float]
+    hematocrit: Optional[float]
+    potassium: Optional[float]
+    phosphorus: Optional[float]
+    bicarbonate: Optional[float]
+    note: Optional[str]
+    recorded_at: Optional[datetime]

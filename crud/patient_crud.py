@@ -9,19 +9,19 @@ async def create_patient_profile(session: AsyncSession, user_id: int, patient_da
 
     profile = PatientProfile(
         user_id=user_id,
-        first_name=patient_data.firstName,
-        last_name=patient_data.lastName,
+        first_name=patient_data.first_name,
+        last_name=patient_data.last_name,
         age=patient_data.age,
         gender=patient_data.gender,
         phone=patient_data.phone,
         height=patient_data.height,
         weight=patient_data.weight,
         bmi=bmi,
-        blood_pressure=patient_data.bloodPressure,
-        existing_diseases=patient_data.existingDiseases,
+        blood_pressure=patient_data.blood_pressure,
+        existing_diseases=patient_data.existing_diseases,
         smoking=patient_data.smoking,
         alcohol=patient_data.alcohol,
-        activity_level=patient_data.activityLevel,
+        activity_level=patient_data.activity_level,
     )
     session.add(profile)
     await session.commit()
@@ -36,19 +36,11 @@ async def get_patient_profile(session: AsyncSession, user_id: int):
     return result.scalar_one_or_none()
 
 
-async def update_patient_profile(session: AsyncSession, profile: PatientProfile, data):
-    update_data = data.dict(exclude_unset=True)
+async def update_patient_profile(session: AsyncSession, profile: PatientProfile, data: PatientProfileUpdate):
+    update_data = data.model_dump(exclude_unset=True)
 
     for key, value in update_data.items():
-        # map camelCase → snake_case
-        mapping = {
-            "firstName": "first_name",
-            "lastName": "last_name",
-            "bloodPressure": "blood_pressure",
-            "existingDiseases": "existing_diseases",
-            "activityLevel": "activity_level",
-        }
-        setattr(profile, mapping.get(key, key), value)
+        setattr(profile, key, value)
 
     # recalc BMI if needed
     if profile.height and profile.weight:
