@@ -5,7 +5,6 @@ from crud.crud_user import get_user_by_line_id, create_user, update_user_profile
 from core.db import get_session
 from fastapi.responses import JSONResponse
 from core.config import settings
-import os
 
 router = APIRouter(prefix="/users", tags=["users"])
 

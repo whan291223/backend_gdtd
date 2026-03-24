@@ -1,12 +1,19 @@
 from fastapi import APIRouter, HTTPException, Depends, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
-from typing import List, Optional, Set
-from pydantic import BaseModel
-from datetime import datetime
+from typing import List, Set
 from core.db import get_session
 from core.config import settings
 from model.models import User, PatientProfile, SpentNafScore, BloodTest
+from schema.admin_schema import (
+    AdminLoginRequest,
+    AdminLoginResponse,
+    PatientManagementRow,
+    PatientDetail,
+)
+from schema.blood_test_schema import BloodTestCreate, BloodTestSummary
+from schema.spent_naf_schema import SpentNafSummary
+from schema.food_log_schema import FoodLogEntry, ExerciseLogEntry
 import secrets
 import hashlib
 
@@ -16,16 +23,6 @@ _active_tokens: Set[str] = set()
 
 
 # --- Auth --------------------------------------------------------------------
-
-class AdminLoginRequest(BaseModel):
-    username: str
-    password: str
-
-
-class AdminLoginResponse(BaseModel):
-    token: str
-    username: str
-
 
 def _make_token(username: str) -> str:
     raw = secrets.token_hex(32)
@@ -54,56 +51,6 @@ async def admin_login(payload: AdminLoginRequest):
 async def admin_logout(token: str = Depends(verify_token)):
     _active_tokens.discard(token)
     return {"message": "Logged out"}
-
-
-# --- Response schemas --------------------------------------------------------
-
-class BloodTestSummary(BaseModel):
-    id: int
-    serum_albumin: Optional[float]
-    npcr: Optional[float]
-    bun: Optional[float]
-    creatinine: Optional[float]
-    cholesterol: Optional[float]
-    hemoglobin: Optional[float]
-    hematocrit: Optional[float]
-    potassium: Optional[float]
-    phosphorus: Optional[float]
-    bicarbonate: Optional[float]
-    note: Optional[str]
-    recorded_at: Optional[datetime]
-
-
-class SpentNafSummary(BaseModel):
-    id: int
-    spent_score: Optional[int]
-    is_high_risk: Optional[bool]
-    naf_score: Optional[int]
-    status: str
-    submitted_at: Optional[datetime]
-
-
-class PatientManagementRow(BaseModel):
-    user_id: int
-    line_user_id: str
-    display_name: Optional[str]
-    picture_url: Optional[str]
-    first_name: Optional[str]
-    last_name: Optional[str]
-    age: Optional[int]
-    gender: Optional[str]
-    phone: Optional[str]
-    height: Optional[float]
-    weight: Optional[float]
-    bmi: Optional[float]
-    blood_pressure: Optional[str]
-    existing_diseases: Optional[List[str]]
-    smoking: Optional[str]
-    alcohol: Optional[str]
-    activity_level: Optional[str]
-    latest_spent: Optional[SpentNafSummary]
-    latest_blood_test: Optional[BloodTestSummary]
-    total_screenings: int
 
 
 # --- Endpoints ---------------------------------------------------------------
@@ -187,57 +134,6 @@ async def list_patients(
         ))
 
     return rows
-
-
-# --- Patient detail schemas --------------------------------------------------
-
-class FoodLogEntry(BaseModel):
-    id: int
-    food_name: str
-    calories: float
-    protein: float
-    sodium: float
-    potassium: float
-    phosphorus: float
-    meal_category: str
-    eaten_date: str
-    created_at: Optional[datetime]
-
-
-class ExerciseLogEntry(BaseModel):
-    id: int
-    exercise_name: str
-    duration_minutes: int
-    calories_burned: float
-    logged_date: str
-    created_at: Optional[datetime]
-
-
-class PatientDetail(BaseModel):
-    # Identity
-    user_id: int
-    line_user_id: str
-    display_name: Optional[str]
-    picture_url: Optional[str]
-    # Profile
-    first_name: Optional[str]
-    last_name: Optional[str]
-    age: Optional[int]
-    gender: Optional[str]
-    phone: Optional[str]
-    height: Optional[float]
-    weight: Optional[float]
-    bmi: Optional[float]
-    blood_pressure: Optional[str]
-    existing_diseases: Optional[List[str]]
-    smoking: Optional[str]
-    alcohol: Optional[str]
-    activity_level: Optional[str]
-    # Full histories
-    spent_naf_history: List[SpentNafSummary]
-    blood_test_history: List[BloodTestSummary]
-    food_log_history: List[FoodLogEntry]
-    exercise_log_history: List[ExerciseLogEntry]
 
 
 # --- Patient detail endpoint -------------------------------------------------
@@ -343,20 +239,6 @@ async def get_patient_detail(
 
 
 # --- Blood test management for admin -----------------------------------------
-
-class BloodTestCreate(BaseModel):
-    serum_albumin: Optional[float] = None
-    npcr:          Optional[float] = None
-    bun:           Optional[float] = None
-    creatinine:    Optional[float] = None
-    cholesterol:   Optional[float] = None
-    hemoglobin:    Optional[float] = None
-    hematocrit:    Optional[float] = None
-    potassium:     Optional[float] = None
-    phosphorus:    Optional[float] = None
-    bicarbonate:   Optional[float] = None
-    note:          Optional[str]   = None
-
 
 @router.post("/patients/{user_id}/blood-test", response_model=BloodTestSummary)
 async def admin_add_blood_test(

@@ -1,23 +1,26 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
+from pydantic.alias_generators import to_camel
 from typing import List, Optional
 
 
 class PatientProfileBase(BaseModel):
-    firstName: str
-    lastName: str
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
+
+    first_name: str
+    last_name: str
     age: int
     gender: str
     phone: str
 
     height: float
     weight: float
-    bloodPressure: str
+    blood_pressure: str
 
-    existingDiseases: List[str]
+    existing_diseases: List[str]
 
     smoking: str
     alcohol: str
-    activityLevel: str
+    activity_level: str
 
 
 class PatientProfileCreate(PatientProfileBase):
@@ -25,24 +28,28 @@ class PatientProfileCreate(PatientProfileBase):
 
 
 class PatientProfileUpdate(BaseModel):
-    firstName: Optional[str] = None
-    lastName: Optional[str] = None
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
+
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
     age: Optional[int] = None
     gender: Optional[str] = None
     phone: Optional[str] = None
 
     height: Optional[float] = None
     weight: Optional[float] = None
-    bloodPressure: Optional[str] = None
+    blood_pressure: Optional[str] = None
 
-    existingDiseases: Optional[List[str]] = None
+    existing_diseases: Optional[List[str]] = None
 
     smoking: Optional[str] = None
     alcohol: Optional[str] = None
-    activityLevel: Optional[str] = None
+    activity_level: Optional[str] = None
 
 
 class PatientProfileRead(BaseModel):
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
+
     id: int
     user_id: int
 
