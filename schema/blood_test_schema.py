@@ -1,9 +1,9 @@
-from pydantic import BaseModel
 from typing import Optional
+from schema.base_schema import BaseSchema
 from datetime import datetime
 
 
-class BloodTestCreate(BaseModel):
+class BloodTestCreate(BaseSchema):
     serum_albumin:  Optional[float] = None
     npcr:           Optional[float] = None
     bun:            Optional[float] = None
@@ -17,7 +17,7 @@ class BloodTestCreate(BaseModel):
     note:           Optional[str]   = None
 
 
-class BloodTestRead(BaseModel):
+class BloodTestRead(BaseSchema):
     id: int
     user_id: int
     serum_albumin:  Optional[float]
@@ -34,7 +34,7 @@ class BloodTestRead(BaseModel):
     recorded_at:    Optional[datetime]
 
 
-class BloodTestSummary(BaseModel):
+class BloodTestSummary(BaseSchema):
     id: int
     serum_albumin: Optional[float]
     npcr: Optional[float]

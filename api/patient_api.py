@@ -15,25 +15,25 @@ from crud.patient_crud import (
 )
 from crud.crud_user import get_user_by_line_id
 
-router = APIRouter(prefix="/patient-profile", tags=["PatientProfile"])
+router = APIRouter(prefix="/patientProfile", tags=["PatientProfile"])
 
 
-async def get_user_id_or_404(line_user_id: str, session: AsyncSession) -> int:
+async def get_user_id_or_404(lineUserId: str, session: AsyncSession) -> int:
     """Resolve line_user_id → internal user.id, raise 404 if not found."""
-    user = await get_user_by_line_id(session, line_user_id)
+    user = await get_user_by_line_id(session, lineUserId)
     if not user:
-        raise HTTPException(status_code=404, detail=f"User '{line_user_id}' not found")
+        raise HTTPException(status_code=404, detail=f"User '{lineUserId}' not found")
     return user.id
 
 
 # 👉 CREATE
-@router.post("/{line_user_id}", response_model=PatientProfileRead)
+@router.post("/{lineUserId}", response_model=PatientProfileRead)
 async def create_profile(
-    line_user_id: str,
+    lineUserId: str,
     data: PatientProfileCreate,
     session: AsyncSession = Depends(get_session),
 ):
-    user_id = await get_user_id_or_404(line_user_id, session)
+    user_id = await get_user_id_or_404(lineUserId, session)
     
     # Prevent duplicate profiles
     existing = await get_patient_profile(session, user_id)
@@ -44,12 +44,12 @@ async def create_profile(
 
 
 # 👉 READ
-@router.get("/{line_user_id}", response_model=PatientProfileRead)
+@router.get("/{lineUserId}", response_model=PatientProfileRead)
 async def read_profile(
-    line_user_id: str,
+    lineUserId: str,
     session: AsyncSession = Depends(get_session),
 ):
-    user_id = await get_user_id_or_404(line_user_id, session)
+    user_id = await get_user_id_or_404(lineUserId, session)
     profile = await get_patient_profile(session, user_id)
 
     if not profile:
@@ -59,13 +59,13 @@ async def read_profile(
 
 
 # 👉 UPDATE
-@router.put("/{line_user_id}", response_model=PatientProfileRead)
+@router.put("/{lineUserId}", response_model=PatientProfileRead)
 async def update_profile(
-    line_user_id: str,
+    lineUserId: str,
     data: PatientProfileUpdate,
     session: AsyncSession = Depends(get_session),
 ):
-    user_id = await get_user_id_or_404(line_user_id, session)
+    user_id = await get_user_id_or_404(lineUserId, session)
     profile = await get_patient_profile(session, user_id)
 
     if not profile:
@@ -75,12 +75,12 @@ async def update_profile(
 
 
 # 👉 DELETE
-@router.delete("/{line_user_id}")
+@router.delete("/{lineUserId}")
 async def delete_profile(
-    line_user_id: str,
+    lineUserId: str,
     session: AsyncSession = Depends(get_session),
 ):
-    user_id = await get_user_id_or_404(line_user_id, session)
+    user_id = await get_user_id_or_404(lineUserId, session)
     profile = await get_patient_profile(session, user_id)
 
     if not profile:

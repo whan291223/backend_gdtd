@@ -19,21 +19,21 @@ from schema.spent_naf_schema import (
 router = APIRouter(prefix="/test", tags=["test"])
 
 
-async def get_user_id_or_404(line_user_id: str, session: AsyncSession) -> int:
+async def get_user_id_or_404(lineUserId: str, session: AsyncSession) -> int:
     """Resolve line_user_id → internal user.id, raise 404 if not found."""
-    user = await get_user_by_line_id(session, line_user_id)
+    user = await get_user_by_line_id(session, lineUserId)
     if not user:
-        raise HTTPException(status_code=404, detail=f"User '{line_user_id}' not found")
+        raise HTTPException(status_code=404, detail=f"User '{lineUserId}' not found")
     return user.id
 
 
-@router.post("/spent/{line_user_id}", response_model=SpentSubmitResponse)
+@router.post("/spent/{lineUserId}", response_model=SpentSubmitResponse)
 async def submit_spent(
-    line_user_id: str,
+    lineUserId: str,
     payload: SpentSubmit,
     session: AsyncSession = Depends(get_session),
 ):
-    user_id = await get_user_id_or_404(line_user_id, session)
+    user_id = await get_user_id_or_404(lineUserId, session)
 
     score = sum(payload.answers)
     is_high_risk = score >= 2          # SPENT threshold: 2+ YES answers
@@ -49,13 +49,13 @@ async def submit_spent(
     )
 
 
-@router.put("/naf/{test_session_id}", response_model=NafSubmitResponse)
+@router.put("/naf/{testSessionId}", response_model=NafSubmitResponse)
 async def submit_naf(
-    test_session_id: int,
+    testSessionId: int,
     payload: NafSubmit,
     session: AsyncSession = Depends(get_session),
 ):
-    record = await get_test_record(session, test_session_id)
+    record = await get_test_record(session, testSessionId)
     if not record:
         raise HTTPException(status_code=404, detail="Session not found")
     if not record.is_high_risk:
@@ -73,32 +73,32 @@ async def submit_naf(
     )
 
 
-@router.get("/session/{test_session_id}", response_model=SpentNafScoreRead)
+@router.get("/session/{testSessionId}", response_model=SpentNafScoreRead)
 async def get_test_record_by_id(
-    test_session_id: int,
+    testSessionId: int,
     db: AsyncSession = Depends(get_session),
 ):
-    record = await get_test_record(db, test_session_id)
+    record = await get_test_record(db, testSessionId)
     if not record:
         raise HTTPException(status_code=404, detail="Session not found")
     return record
 
 
-@router.get("/history/{line_user_id}", response_model=List[SpentNafScoreRead])
+@router.get("/history/{lineUserId}", response_model=List[SpentNafScoreRead])
 async def get_history(
-    line_user_id: str,
+    lineUserId: str,
     session: AsyncSession = Depends(get_session),
 ):
-    user_id = await get_user_id_or_404(line_user_id, session)
+    user_id = await get_user_id_or_404(lineUserId, session)
     return await get_history_by_user_id(session, user_id)
 
 
-@router.delete("/session/{test_session_id}", status_code=204)
+@router.delete("/session/{testSessionId}", status_code=204)
 async def delete_session(
-    test_session_id: int,
+    testSessionId: int,
     session: AsyncSession = Depends(get_session),
 ):
-    record = await get_test_record(session, test_session_id)
+    record = await get_test_record(session, testSessionId)
     if not record:
         raise HTTPException(status_code=404, detail="Session not found")
     await delete_session_by_id(session, record)

@@ -152,28 +152,28 @@ async def list_patients(
 
 # --- Patient detail endpoint -------------------------------------------------
 
-@router.get("/patients/{user_id}", response_model=PatientDetail)
+@router.get("/patients/{userId}", response_model=PatientDetail)
 async def get_patient_detail(
-    user_id: int,
+    userId: int,
     session: AsyncSession = Depends(get_session),
     _: str = Depends(verify_token),
 ):
     from model.models import FoodLog, ExerciseLog
 
-    user_result = await session.execute(select(User).where(User.id == user_id))
+    user_result = await session.execute(select(User).where(User.id == userId))
     user = user_result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
     profile_result = await session.execute(
-        select(PatientProfile).where(PatientProfile.user_id == user_id)
+        select(PatientProfile).where(PatientProfile.user_id == userId)
     )
     profile = profile_result.scalar_one_or_none()
 
     # SPENT/NAF history — all sessions newest first
     scores_result = await session.execute(
         select(SpentNafScore)
-        .where(SpentNafScore.user_id == user_id)
+        .where(SpentNafScore.user_id == userId)
         .order_by(SpentNafScore.submitted_at.desc())
     )
     scores = scores_result.scalars().all()
@@ -181,7 +181,7 @@ async def get_patient_detail(
     # Blood test history — all records newest first
     blood_result = await session.execute(
         select(BloodTest)
-        .where(BloodTest.user_id == user_id)
+        .where(BloodTest.user_id == userId)
         .order_by(BloodTest.recorded_at.desc())
     )
     blood_tests = blood_result.scalars().all()
@@ -189,7 +189,7 @@ async def get_patient_detail(
     # Food log history — last 30 days newest first
     food_result = await session.execute(
         select(FoodLog)
-        .where(FoodLog.user_id == user_id)
+        .where(FoodLog.user_id == userId)
         .order_by(FoodLog.eaten_date.desc(), FoodLog.created_at.desc())
         .limit(200)
     )
@@ -198,7 +198,7 @@ async def get_patient_detail(
     # Exercise log history — last 30 days newest first
     exercise_result = await session.execute(
         select(ExerciseLog)
-        .where(ExerciseLog.user_id == user_id)
+        .where(ExerciseLog.user_id == userId)
         .order_by(ExerciseLog.logged_date.desc(), ExerciseLog.created_at.desc())
         .limit(100)
     )
@@ -254,19 +254,19 @@ async def get_patient_detail(
 
 # --- Blood test management for admin -----------------------------------------
 
-@router.post("/patients/{user_id}/blood-test", response_model=BloodTestSummary)
+@router.post("/patients/{userId}/bloodTest", response_model=BloodTestSummary)
 async def admin_add_blood_test(
-    user_id: int,
+    userId: int,
     data: BloodTestCreate,
     session: AsyncSession = Depends(get_session),
     _: str = Depends(verify_token),
 ):
     """Admin can manually add a blood test record for a patient."""
-    user_result = await session.execute(select(User).where(User.id == user_id))
+    user_result = await session.execute(select(User).where(User.id == userId))
     if not user_result.scalar_one_or_none():
         raise HTTPException(status_code=404, detail="User not found")
 
-    record = BloodTest(user_id=user_id, **data.model_dump())
+    record = BloodTest(user_id=userId, **data.model_dump())
     session.add(record)
     await session.commit()
     await session.refresh(record)
@@ -280,14 +280,14 @@ async def admin_add_blood_test(
     )
 
 
-@router.delete("/blood-test/{blood_test_id}", status_code=204)
+@router.delete("/bloodTest/{bloodTestId}", status_code=204)
 async def admin_delete_blood_test(
-    blood_test_id: int,
+    bloodTestId: int,
     session: AsyncSession = Depends(get_session),
     _: str = Depends(verify_token),
 ):
     """Admin can delete a specific blood test record."""
-    result = await session.execute(select(BloodTest).where(BloodTest.id == blood_test_id))
+    result = await session.execute(select(BloodTest).where(BloodTest.id == bloodTestId))
     record = result.scalar_one_or_none()
     if not record:
         raise HTTPException(status_code=404, detail="Blood test record not found")

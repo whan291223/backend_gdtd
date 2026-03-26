@@ -2,14 +2,14 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 from typing import List
-from pydantic import BaseModel
+from schema.base_schema import BaseSchema
 from core.db import get_session
 from model.models import FoodDatabase
 
 router = APIRouter(prefix="/api", tags=["foods"])
 
 
-class FoodItem(BaseModel):
+class FoodItem(BaseSchema):
     id: int
     name: str
     calories: float

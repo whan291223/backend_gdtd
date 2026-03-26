@@ -1,8 +1,8 @@
-from pydantic import BaseModel
 from typing import List, Optional
+from schema.base_schema import BaseSchema
 
 
-class PatientProfileBase(BaseModel):
+class PatientProfileBase(BaseSchema):
     first_name: str
     last_name: str
     age: int
@@ -24,7 +24,7 @@ class PatientProfileCreate(PatientProfileBase):
     pass
 
 
-class PatientProfileUpdate(BaseModel):
+class PatientProfileUpdate(BaseSchema):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     age: Optional[int] = None
@@ -42,7 +42,7 @@ class PatientProfileUpdate(BaseModel):
     activity_level: Optional[str] = None
 
 
-class PatientProfileRead(BaseModel):
+class PatientProfileRead(BaseSchema):
     id: int
     user_id: int
 

@@ -1,22 +1,22 @@
-from pydantic import BaseModel
 from typing import List, Optional
+from schema.base_schema import BaseSchema
 from datetime import datetime
 from schema.blood_test_schema import BloodTestSummary
 from schema.spent_naf_schema import SpentNafSummary
 from schema.food_log_schema import FoodLogEntry, ExerciseLogEntry
 
 
-class AdminLoginRequest(BaseModel):
+class AdminLoginRequest(BaseSchema):
     username: str
     password: str
 
 
-class AdminLoginResponse(BaseModel):
+class AdminLoginResponse(BaseSchema):
     token: str
     username: str
 
 
-class PatientManagementRow(BaseModel):
+class PatientManagementRow(BaseSchema):
     user_id: int
     line_user_id: str
     display_name: Optional[str]
@@ -39,7 +39,7 @@ class PatientManagementRow(BaseModel):
     total_screenings: int
 
 
-class PatientDetail(BaseModel):
+class PatientDetail(BaseSchema):
     # Identity
     user_id: int
     line_user_id: str

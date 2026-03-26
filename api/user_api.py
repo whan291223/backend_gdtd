@@ -8,11 +8,11 @@ from core.config import settings
 
 router = APIRouter(prefix="/users", tags=["users"])
 
-@router.get("/liff-id")
+@router.get("/liffId")
 async def get_liff_id():
     return JSONResponse({"liffId": settings.LIFF_ID})
 
-@router.post("/create_user_profile")
+@router.post("/createUserProfile")
 async def create_user_profile(user_data: UserCreate, session: AsyncSession = Depends(get_session)):
     user = await get_user_by_line_id(session, user_data.line_user_id)
 
@@ -21,19 +21,19 @@ async def create_user_profile(user_data: UserCreate, session: AsyncSession = Dep
 
     return user
 
-@router.get("/{line_user_id}")
-async def get_user_profile(line_user_id: str, session: AsyncSession = Depends(get_session)):
-    user = await get_user_by_line_id(session, line_user_id)
+@router.get("/{lineUserId}")
+async def get_user_profile(lineUserId: str, session: AsyncSession = Depends(get_session)):
+    user = await get_user_by_line_id(session, lineUserId)
     return user
 
 
-@router.put("/{line_user_id}")
+@router.put("/{lineUserId}")
 async def update_user(
-    line_user_id: str,
+    lineUserId: str,
     user_update: UserUpdate,
     session: AsyncSession = Depends(get_session)
 ):
-    user = await get_user_by_line_id(session, line_user_id)
+    user = await get_user_by_line_id(session, lineUserId)
 
     if not user:
         raise HTTPException(status_code=404, detail="User not found")

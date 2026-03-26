@@ -1,9 +1,9 @@
-from pydantic import BaseModel
 from typing import Optional
+from schema.base_schema import BaseSchema
 from datetime import datetime
 
 
-class FoodLogCreate(BaseModel):
+class FoodLogCreate(BaseSchema):
     food_name: str
     calories: float
     protein: float = 0
@@ -14,7 +14,7 @@ class FoodLogCreate(BaseModel):
     eaten_date: str  # "YYYY-MM-DD"
 
 
-class FoodLogRead(BaseModel):
+class FoodLogRead(BaseSchema):
     id: int
     user_id: int
     food_name: str
@@ -28,14 +28,14 @@ class FoodLogRead(BaseModel):
     created_at: Optional[datetime]
 
 
-class ExerciseLogCreate(BaseModel):
+class ExerciseLogCreate(BaseSchema):
     exercise_name: str
     duration_minutes: int
     calories_burned: float
     logged_date: str  # "YYYY-MM-DD"
 
 
-class ExerciseLogRead(BaseModel):
+class ExerciseLogRead(BaseSchema):
     id: int
     user_id: int
     exercise_name: str
@@ -45,16 +45,16 @@ class ExerciseLogRead(BaseModel):
     created_at: Optional[datetime]
 
 
-class DailyCalorieGoalRead(BaseModel):
+class DailyCalorieGoalRead(BaseSchema):
     user_id: int
     daily_goal: int
 
 
-class DailyCalorieGoalUpdate(BaseModel):
+class DailyCalorieGoalUpdate(BaseSchema):
     daily_goal: int
 
 
-class FoodLogUpdate(BaseModel):
+class FoodLogUpdate(BaseSchema):
     food_name: Optional[str] = None
     calories: Optional[float] = None
     protein: Optional[float] = None
@@ -64,7 +64,7 @@ class FoodLogUpdate(BaseModel):
     meal_category: Optional[str] = None
 
 
-class FoodLogEntry(BaseModel):
+class FoodLogEntry(BaseSchema):
     id: int
     food_name: str
     calories: float
@@ -77,7 +77,7 @@ class FoodLogEntry(BaseModel):
     created_at: Optional[datetime]
 
 
-class ExerciseLogEntry(BaseModel):
+class ExerciseLogEntry(BaseSchema):
     id: int
     exercise_name: str
     duration_minutes: int

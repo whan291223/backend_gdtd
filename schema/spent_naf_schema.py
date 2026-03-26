@@ -1,20 +1,20 @@
-from pydantic import BaseModel
 from typing import List, Optional
+from schema.base_schema import BaseSchema
 from datetime import datetime
 
 
 # POST /test/spent/{line_user_id} — user_id now comes from URL, not body
-class SpentSubmit(BaseModel):
+class SpentSubmit(BaseSchema):
     answers: List[int]
 
 
 # PUT /test/naf/{test_session_id} — session_id now comes from URL, not body
-class NafSubmit(BaseModel):
+class NafSubmit(BaseSchema):
     answers: List[int]
 
 
 # Response after submitting SPENT
-class SpentSubmitResponse(BaseModel):
+class SpentSubmitResponse(BaseSchema):
     session_id: int
     spent_score: int
     is_high_risk: bool
@@ -22,14 +22,14 @@ class SpentSubmitResponse(BaseModel):
 
 
 # Response after submitting NAF
-class NafSubmitResponse(BaseModel):
+class NafSubmitResponse(BaseSchema):
     session_id: int
     naf_score: int
     status: str
 
 
 # Full session record (for history / result pages)
-class SpentNafScoreRead(BaseModel):
+class SpentNafScoreRead(BaseSchema):
     id: int
     user_id: int
     user_answer_spent: List[int]
@@ -41,7 +41,7 @@ class SpentNafScoreRead(BaseModel):
     submitted_at: Optional[datetime]
 
 
-class SpentNafSummary(BaseModel):
+class SpentNafSummary(BaseSchema):
     id: int
     spent_score: Optional[int]
     is_high_risk: Optional[bool]
