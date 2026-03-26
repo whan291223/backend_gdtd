@@ -48,6 +48,8 @@ class PatientProfileUpdate(BaseModel):
 
 
 class PatientProfileRead(BaseModel):
+    model_config = common_config
+
     id: int
     user_id: int
 

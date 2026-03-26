@@ -15,11 +15,15 @@ class AdminLoginRequest(BaseModel):
 
 
 class AdminLoginResponse(BaseModel):
+    model_config = common_config
+
     token: str
     username: str
 
 
 class PatientManagementRow(BaseModel):
+    model_config = common_config
+
     user_id: int
     line_user_id: str
     display_name: Optional[str]
@@ -43,6 +47,8 @@ class PatientManagementRow(BaseModel):
 
 
 class PatientDetail(BaseModel):
+    model_config = common_config
+
     # Identity
     user_id: int
     line_user_id: str

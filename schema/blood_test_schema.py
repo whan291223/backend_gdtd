@@ -21,6 +21,8 @@ class BloodTestCreate(BaseModel):
 
 
 class BloodTestRead(BaseModel):
+    model_config = common_config
+
     id: int
     user_id: int
     serum_albumin:  Optional[float]
@@ -38,6 +40,8 @@ class BloodTestRead(BaseModel):
 
 
 class BloodTestSummary(BaseModel):
+    model_config = common_config
+
     id: int
     serum_albumin: Optional[float]
     npcr: Optional[float]

@@ -18,6 +18,8 @@ class FoodLogCreate(BaseModel):
 
 
 class FoodLogRead(BaseModel):
+    model_config = common_config
+
     id: int
     user_id: int
     food_name: str
@@ -41,6 +43,8 @@ class ExerciseLogCreate(BaseModel):
 
 
 class ExerciseLogRead(BaseModel):
+    model_config = common_config
+
     id: int
     user_id: int
     exercise_name: str
@@ -51,6 +55,8 @@ class ExerciseLogRead(BaseModel):
 
 
 class DailyCalorieGoalRead(BaseModel):
+    model_config = common_config
+
     user_id: int
     daily_goal: int
 
@@ -74,6 +80,8 @@ class FoodLogUpdate(BaseModel):
 
 
 class FoodLogEntry(BaseModel):
+    model_config = common_config
+
     id: int
     food_name: str
     calories: float
@@ -87,6 +95,8 @@ class FoodLogEntry(BaseModel):
 
 
 class ExerciseLogEntry(BaseModel):
+    model_config = common_config
+
     id: int
     exercise_name: str
     duration_minutes: int
