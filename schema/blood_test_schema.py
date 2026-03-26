@@ -1,9 +1,12 @@
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
+from schema.config import common_config
 
 
 class BloodTestCreate(BaseModel):
+    model_config = common_config
+
     serum_albumin:  Optional[float] = None
     npcr:           Optional[float] = None
     bun:            Optional[float] = None

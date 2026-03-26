@@ -1,15 +1,20 @@
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
+from schema.config import common_config
 
 
 # POST /test/spent/{line_user_id} — user_id now comes from URL, not body
 class SpentSubmit(BaseModel):
+    model_config = common_config
+
     answers: List[int]
 
 
 # PUT /test/naf/{test_session_id} — session_id now comes from URL, not body
 class NafSubmit(BaseModel):
+    model_config = common_config
+
     answers: List[int]
 
 

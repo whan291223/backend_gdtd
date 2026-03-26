@@ -1,9 +1,12 @@
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
+from schema.config import common_config
 
 
 class FoodLogCreate(BaseModel):
+    model_config = common_config
+
     food_name: str
     calories: float
     protein: float = 0
@@ -29,6 +32,8 @@ class FoodLogRead(BaseModel):
 
 
 class ExerciseLogCreate(BaseModel):
+    model_config = common_config
+
     exercise_name: str
     duration_minutes: int
     calories_burned: float
@@ -51,10 +56,14 @@ class DailyCalorieGoalRead(BaseModel):
 
 
 class DailyCalorieGoalUpdate(BaseModel):
+    model_config = common_config
+
     daily_goal: int
 
 
 class FoodLogUpdate(BaseModel):
+    model_config = common_config
+
     food_name: Optional[str] = None
     calories: Optional[float] = None
     protein: Optional[float] = None

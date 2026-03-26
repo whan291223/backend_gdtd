@@ -1,8 +1,11 @@
 from pydantic import BaseModel
 from typing import List, Optional
+from schema.config import common_config
 
 
 class PatientProfileBase(BaseModel):
+    model_config = common_config
+
     first_name: str
     last_name: str
     age: int
@@ -25,6 +28,8 @@ class PatientProfileCreate(PatientProfileBase):
 
 
 class PatientProfileUpdate(BaseModel):
+    model_config = common_config
+
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     age: Optional[int] = None

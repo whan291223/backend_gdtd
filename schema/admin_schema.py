@@ -4,9 +4,12 @@ from datetime import datetime
 from schema.blood_test_schema import BloodTestSummary
 from schema.spent_naf_schema import SpentNafSummary
 from schema.food_log_schema import FoodLogEntry, ExerciseLogEntry
+from schema.config import common_config
 
 
 class AdminLoginRequest(BaseModel):
+    model_config = common_config
+
     username: str
     password: str
 
