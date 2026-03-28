@@ -34,7 +34,7 @@ class SpentNafScore(SQLModel, table=True):
     # NAF: store structured form answers as JSON — scoring done server-side
     user_answer_naf: Optional[Dict[str, Any]] = Field(
         default=None,
-        sa_column=Column(JSON, nullable=False)
+        sa_column=Column(JSON, nullable=True)
     )
     naf_score: Optional[int] = Field(default=None)
 
