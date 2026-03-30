@@ -29,7 +29,7 @@ async def update_naf_answers(
     answers: List[int],
     score: int,
 ) -> SpentNafScore:
-    record.user_answer_naf = answers
+    # record.user_answer_naf = answers
     record.naf_score = score
     record.status = "completed"
     await session.commit()

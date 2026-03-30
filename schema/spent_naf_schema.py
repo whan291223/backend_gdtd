@@ -46,7 +46,7 @@ class SpentNafScoreRead(BaseModel):
     user_answer_spent: List[int]
     spent_score: Optional[int]
     is_high_risk: Optional[bool]
-    user_answer_naf: List[int]
+    # user_answer_naf: List[int]
     naf_score: Optional[int]
     status: str
     submitted_at: Optional[datetime]
