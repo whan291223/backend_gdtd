@@ -56,6 +56,7 @@ class SpentNafSummary(BaseModel):
     model_config = common_config
 
     id: int
+    user_answer_spent: List[int]
     spent_score: Optional[int]
     is_high_risk: Optional[bool]
     naf_score: Optional[int]

@@ -124,6 +124,7 @@ async def list_patients(
             activity_level=profile.activity_level,
             latest_spent=SpentNafSummary(
                 id=latest_score.id,
+                user_answer_spent=latest_score.user_answer_spent,
                 spent_score=latest_score.spent_score,
                 is_high_risk=latest_score.is_high_risk,
                 naf_score=latest_score.naf_score,
@@ -225,7 +226,7 @@ async def get_patient_detail(
         activity_level=profile.activity_level if profile else None,
         spent_naf_history=[
             SpentNafSummary(
-                id=s.id, spent_score=s.spent_score, is_high_risk=s.is_high_risk,
+                id=s.id, user_answer_spent=s.user_answer_spent, spent_score=s.spent_score, is_high_risk=s.is_high_risk,
                 naf_score=s.naf_score, status=s.status, submitted_at=s.submitted_at,
             ) for s in scores
         ],
@@ -378,7 +379,7 @@ async def admin_update_patient_profile(
         activity_level=profile.activity_level,
         spent_naf_history=[
             SpentNafSummary(
-                id=s.id, spent_score=s.spent_score, is_high_risk=s.is_high_risk,
+                id=s.id, user_answer_spent=s.user_answer_spent, spent_score=s.spent_score, is_high_risk=s.is_high_risk,
                 naf_score=s.naf_score, status=s.status, submitted_at=s.submitted_at,
             ) for s in scores
         ],
