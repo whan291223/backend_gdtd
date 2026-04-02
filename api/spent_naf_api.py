@@ -63,9 +63,18 @@ async def submit_naf(
     if record.status == "completed":
         raise HTTPException(status_code=400, detail="Session already completed")
 
-    # Calculate score on backend
-    naf_score = calculate_naf_score(naf_answers)
-    record = await update_naf_answers(session, record, naf_answers, naf_score)
+    # Calculate score and get breakdown
+    naf_score, breakdown = calculate_naf_score(naf_answers)
+    
+    # Update record with breakdown
+    record = await update_naf_answers(
+        session, 
+        record, 
+        naf_answers, 
+        naf_score,
+        breakdown.model_dump()  # Pass breakdown as dict for JSON storage
+    )
+    
     return NafSubmitResponse(
         session_id=record.id,
         naf_score=record.naf_score,

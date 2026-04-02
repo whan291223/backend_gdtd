@@ -40,8 +40,9 @@ class SpentNafScoreRead(BaseModel):
     user_answer_spent: List[int]
     spent_score: Optional[int]
     is_high_risk: Optional[bool]
-    user_answer_naf: "NafAnswers"
+    user_answer_naf: Optional["NafAnswers"] = None
     naf_score: Optional[int]
+    naf_score_breakdown: Optional["NafScoreBreakdown"] = None
     status: str
     submitted_at: Optional[datetime]
 
@@ -76,5 +77,24 @@ class SpentNafSummary(BaseModel):
     spent_score: Optional[int]
     is_high_risk: Optional[bool]
     naf_score: Optional[int]
+    naf_score_breakdown: Optional["NafScoreBreakdown"] = None
     status: str
     submitted_at: Optional[datetime]
+
+# NAF Score Breakdown - shows how the score was calculated
+class NafScoreBreakdown(BaseModel):
+    model_config = common_config
+
+    weight_method: int = 0
+    bmi: int = 0
+    obese_level: int = 0
+    weight_change: int = 0
+    food_consistency: int = 0
+    food_quantity: int = 0
+    food_access: int = 0
+    swallow_problem: int = 0
+    intestine_problem: int = 0
+    eating_problem: int = 0
+    disease_severity3: int = 0
+    disease_severity6: int = 0
+    total: int = 0

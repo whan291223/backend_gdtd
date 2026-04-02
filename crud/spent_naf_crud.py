@@ -27,12 +27,16 @@ async def create_spent_session(
 async def update_naf_answers(
     session: AsyncSession,
     record: SpentNafScore,
-    answers: NafAnswers,
-    score: int,
+    naf_answers: NafAnswers,
+    naf_score: int,
+    naf_score_breakdown: dict,  # Add this parameter
 ) -> SpentNafScore:
-    record.user_answer_naf = answers.model_dump()
-    record.naf_score = score
+    """Update NAF answers, score, and breakdown for a test session."""
+    record.user_answer_naf = naf_answers.model_dump()
+    record.naf_score = naf_score
+    record.naf_score_breakdown = naf_score_breakdown  # Store breakdown
     record.status = "completed"
+    
     await session.commit()
     await session.refresh(record)
     return record
