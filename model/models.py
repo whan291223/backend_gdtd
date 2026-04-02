@@ -37,7 +37,10 @@ class SpentNafScore(SQLModel, table=True):
         sa_column=Column(JSON, nullable=True)
     )
     naf_score: Optional[int] = Field(default=None)
-
+    naf_score_breakdown: Optional[Dict[str, Any]] = Field(
+        default=None,
+        sa_column=Column(JSON, nullable=True)
+    )
     status: str = Field(default="pending_spent")
 
     submitted_at: Optional[datetime] = Field(
