@@ -11,12 +11,6 @@ class SpentSubmit(BaseModel):
     answers: List[int]
 
 
-# PUT /test/naf/{test_session_id} — session_id now comes from URL, not body
-class NafSubmit(BaseModel):
-    model_config = common_config
-
-    answers: List[int]
-
 
 # Response after submitting SPENT
 class SpentSubmitResponse(BaseModel):
@@ -46,12 +40,34 @@ class SpentNafScoreRead(BaseModel):
     user_answer_spent: List[int]
     spent_score: Optional[int]
     is_high_risk: Optional[bool]
-    # user_answer_naf: List[int]
+    user_answer_naf: "NafAnswers"
     naf_score: Optional[int]
     status: str
     submitted_at: Optional[datetime]
 
+class NafAnswers(BaseModel):
+    model_config = common_config
 
+    height: str
+    arm_span: str
+    body_length: str
+    weight: str
+    weight_method: str
+    relatives: str
+    obeseLevel: str
+    bmi: str
+    weight_change: str
+    food_consistency: str
+    food_quantity: str
+    swallow_problem: List[str]
+    intestine_problem: List[str]
+    eating_problem: List[str]
+    food_access: List[str]
+    disease_severity3: List[str]
+    disease_severity3_other: str
+    disease_severity6: List[str]
+    disease_severity6_other: str
+#to be done
 class SpentNafSummary(BaseModel):
     model_config = common_config
 

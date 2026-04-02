@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.ext.asyncio.session import AsyncSession
 from typing import List
 from core.db import get_session
@@ -12,10 +12,10 @@ from crud.spent_naf_crud import (
 from crud.crud_user import get_user_by_line_id
 from schema.spent_naf_schema import (
     SpentSubmit, SpentSubmitResponse,
-    NafSubmit, NafSubmitResponse,
+    NafAnswers, NafSubmitResponse,
     SpentNafScoreRead,
 )
-
+from services.naf_calculator import calculate_naf_score
 router = APIRouter(prefix="/test", tags=["test"])
 
 
@@ -30,16 +30,16 @@ async def get_user_id_or_404(line_user_id: str, session: AsyncSession) -> int:
 @router.post("/spent/{line_user_id}", response_model=SpentSubmitResponse)
 async def submit_spent(
     line_user_id: str,
-    payload: SpentSubmit,
+    spent_answer: SpentSubmit,
     session: AsyncSession = Depends(get_session),
 ):
     user_id = await get_user_id_or_404(line_user_id, session)
 
-    score = sum(payload.answers)
+    score = sum(spent_answer.answers)
     is_high_risk = score >= 2          # SPENT threshold: 2+ YES answers
 
     record = await create_spent_session(
-        session, user_id, payload.answers, score, is_high_risk
+        session, user_id, spent_answer.answers, score, is_high_risk
     )
     return SpentSubmitResponse(
         session_id=record.id,
@@ -52,7 +52,7 @@ async def submit_spent(
 @router.put("/naf/{test_session_id}", response_model=NafSubmitResponse)
 async def submit_naf(
     test_session_id: int,
-    payload: NafSubmit,
+    naf_answers: NafAnswers,
     session: AsyncSession = Depends(get_session),
 ):
     record = await get_test_record(session, test_session_id)
@@ -63,9 +63,9 @@ async def submit_naf(
     if record.status == "completed":
         raise HTTPException(status_code=400, detail="Session already completed")
 
-    naf_score = sum(payload.answers)
-
-    record = await update_naf_answers(session, record, payload.answers, naf_score)
+    # Calculate score on backend
+    naf_score = calculate_naf_score(naf_answers)
+    record = await update_naf_answers(session, record, naf_answers, naf_score)
     return NafSubmitResponse(
         session_id=record.id,
         naf_score=record.naf_score,

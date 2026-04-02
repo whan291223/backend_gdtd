@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from model.models import SpentNafScore
+from schema.spent_naf_schema import NafAnswers
 from typing import List, Optional
 
 async def create_spent_session(
@@ -26,10 +27,10 @@ async def create_spent_session(
 async def update_naf_answers(
     session: AsyncSession,
     record: SpentNafScore,
-    answers: List[int],
+    answers: NafAnswers,
     score: int,
 ) -> SpentNafScore:
-    # record.user_answer_naf = answers
+    record.user_answer_naf = answers.model_dump()
     record.naf_score = score
     record.status = "completed"
     await session.commit()
