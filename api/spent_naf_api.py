@@ -16,6 +16,8 @@ from schema.spent_naf_schema import (
     SpentNafScoreRead,
 )
 from services.naf_calculator import calculate_naf_score
+from services.nutrition_service import get_naf_recommendations
+
 router = APIRouter(prefix="/test", tags=["test"])
 
 
@@ -90,7 +92,13 @@ async def get_test_record_by_id(
     record = await get_test_record(db, test_session_id)
     if not record:
         raise HTTPException(status_code=404, detail="Session not found")
-    return record
+
+    # Add recommendations
+    recs = get_naf_recommendations(record.naf_score)
+    response = SpentNafScoreRead.model_validate(record)
+    response.naf_level = recs["naf_level"]
+    response.naf_recommendations = recs["naf_recommendations"]
+    return response
 
 
 @router.get("/history/{line_user_id}", response_model=List[SpentNafScoreRead])
@@ -99,7 +107,17 @@ async def get_history(
     session: AsyncSession = Depends(get_session),
 ):
     user_id = await get_user_id_or_404(line_user_id, session)
-    return await get_history_by_user_id(session, user_id)
+    records = await get_history_by_user_id(session, user_id)
+
+    responses = []
+    for r in records:
+        recs = get_naf_recommendations(r.naf_score)
+        resp = SpentNafScoreRead.model_validate(r)
+        resp.naf_level = recs["naf_level"]
+        resp.naf_recommendations = recs["naf_recommendations"]
+        responses.append(resp)
+
+    return responses
 
 
 @router.delete("/session/{test_session_id}", status_code=204)

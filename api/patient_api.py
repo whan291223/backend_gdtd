@@ -14,6 +14,7 @@ from crud.patient_crud import (
     delete_patient_profile,
 )
 from crud.crud_user import get_user_by_line_id
+from services.nutrition_service import calculate_nutrition_targets
 
 router = APIRouter(prefix="/patient-profile", tags=["PatientProfile"])
 
@@ -40,7 +41,13 @@ async def create_profile(
     if existing:
         raise HTTPException(status_code=409, detail="Profile already exists, use PUT to update")
 
-    return await create_patient_profile(session, user_id, data)
+    profile = await create_patient_profile(session, user_id, data)
+
+    # Add nutrition targets
+    targets = calculate_nutrition_targets(profile.weight, profile.urine_amount)
+    profile_read = PatientProfileRead.model_validate(profile)
+    profile_read.nutrition_targets = targets
+    return profile_read
 
 
 # 👉 READ
@@ -55,7 +62,11 @@ async def read_profile(
     if not profile:
         raise HTTPException(status_code=404, detail="Profile not found")
 
-    return profile
+    # Add nutrition targets
+    targets = calculate_nutrition_targets(profile.weight, profile.urine_amount)
+    profile_read = PatientProfileRead.model_validate(profile)
+    profile_read.nutrition_targets = targets
+    return profile_read
 
 
 # 👉 UPDATE
@@ -71,7 +82,13 @@ async def update_profile(
     if not profile:
         raise HTTPException(status_code=404, detail="Profile not found")
 
-    return await update_patient_profile(session, profile, data)
+    profile = await update_patient_profile(session, profile, data)
+
+    # Add nutrition targets
+    targets = calculate_nutrition_targets(profile.weight, profile.urine_amount)
+    profile_read = PatientProfileRead.model_validate(profile)
+    profile_read.nutrition_targets = targets
+    return profile_read
 
 
 # 👉 DELETE
