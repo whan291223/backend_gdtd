@@ -97,12 +97,6 @@ class ExerciseLog(SQLModel, table=True):
     )
 
 
-class DailyCalorieGoal(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(index=True, unique=True, foreign_key="user.id")
-    daily_goal: int = Field(default=2000)
-
-
 class PatientProfile(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 

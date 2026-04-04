@@ -7,13 +7,11 @@ from crud.food_log_crud import (
     update_food_log,
     add_food_log, get_food_logs_by_date, delete_food_log,
     add_exercise_log, get_exercise_logs_by_date, delete_exercise_log,
-    get_or_create_calorie_goal, update_calorie_goal,
 )
 from schema.food_log_schema import (
     FoodLogUpdate,
     FoodLogCreate, FoodLogRead,
     ExerciseLogCreate, ExerciseLogRead,
-    DailyCalorieGoalRead, DailyCalorieGoalUpdate,
 )
 
 router = APIRouter(prefix="/food-log", tags=["FoodLog"])
@@ -107,23 +105,3 @@ async def remove_exercise(
     if not deleted:
         raise HTTPException(status_code=404, detail="Exercise entry not found")
 
-
-# --- Calorie goal ------------------------------------------------------------
-
-@router.get("/{line_user_id}/goal", response_model=DailyCalorieGoalRead)
-async def get_goal(
-    line_user_id: str,
-    session: AsyncSession = Depends(get_session),
-):
-    user_id = await get_user_id_or_404(line_user_id, session)
-    return await get_or_create_calorie_goal(session, user_id)
-
-
-@router.put("/{line_user_id}/goal", response_model=DailyCalorieGoalRead)
-async def set_goal(
-    line_user_id: str,
-    data: DailyCalorieGoalUpdate,
-    session: AsyncSession = Depends(get_session),
-):
-    user_id = await get_user_id_or_404(line_user_id, session)
-    return await update_calorie_goal(session, user_id, data)

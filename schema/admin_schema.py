@@ -40,7 +40,7 @@ class PatientManagementRow(BaseModel):
     existing_diseases: Optional[List[str]]
     smoking: Optional[str]
     alcohol: Optional[str]
-    activity_level: Optional[str]
+    urine_amount: Optional[float]
     latest_spent: Optional[SpentNafSummary]
     latest_blood_test: Optional[BloodTestSummary]
     total_screenings: int
@@ -67,7 +67,7 @@ class PatientDetail(BaseModel):
     existing_diseases: Optional[List[str]]
     smoking: Optional[str]
     alcohol: Optional[str]
-    activity_level: Optional[str]
+    urine_amount: Optional[float]
     # Full histories
     spent_naf_history: List[SpentNafSummary]
     blood_test_history: List[BloodTestSummary]

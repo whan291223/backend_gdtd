@@ -54,19 +54,6 @@ class ExerciseLogRead(BaseModel):
     created_at: Optional[datetime]
 
 
-class DailyCalorieGoalRead(BaseModel):
-    model_config = common_config
-
-    user_id: int
-    daily_goal: int
-
-
-class DailyCalorieGoalUpdate(BaseModel):
-    model_config = common_config
-
-    daily_goal: int
-
-
 class FoodLogUpdate(BaseModel):
     model_config = common_config
 

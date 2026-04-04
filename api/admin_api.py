@@ -121,7 +121,7 @@ async def list_patients(
             existing_diseases=profile.existing_diseases,
             smoking=profile.smoking,
             alcohol=profile.alcohol,
-            activity_level=profile.activity_level,
+            urine_amount=profile.urine_amount,
             latest_spent=SpentNafSummary(
                 id=latest_score.id,
                 user_answer_spent=latest_score.user_answer_spent,
@@ -223,7 +223,7 @@ async def get_patient_detail(
         existing_diseases=profile.existing_diseases if profile else None,
         smoking=profile.smoking if profile else None,
         alcohol=profile.alcohol if profile else None,
-        activity_level=profile.activity_level if profile else None,
+        urine_amount=profile.urine_amount if profile else None,
         spent_naf_history=[
             SpentNafSummary(
                 id=s.id, user_answer_spent=s.user_answer_spent, spent_score=s.spent_score, is_high_risk=s.is_high_risk,
@@ -376,7 +376,7 @@ async def admin_update_patient_profile(
         existing_diseases=profile.existing_diseases,
         smoking=profile.smoking,
         alcohol=profile.alcohol,
-        activity_level=profile.activity_level,
+        urine_amount=profile.urine_amount,
         spent_naf_history=[
             SpentNafSummary(
                 id=s.id, user_answer_spent=s.user_answer_spent, spent_score=s.spent_score, is_high_risk=s.is_high_risk,

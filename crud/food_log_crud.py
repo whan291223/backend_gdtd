@@ -1,7 +1,7 @@
 from sqlmodel import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from model.models import FoodLog, ExerciseLog, DailyCalorieGoal
-from schema.food_log_schema import FoodLogCreate, FoodLogUpdate, ExerciseLogCreate, DailyCalorieGoalUpdate
+from model.models import FoodLog, ExerciseLog
+from schema.food_log_schema import FoodLogCreate, FoodLogUpdate, ExerciseLogCreate
 from typing import List, Optional
 
 # --- Food Log ----------------------------------------------------------------
@@ -64,32 +64,6 @@ async def delete_exercise_log(session: AsyncSession, entry_id: int, user_id: int
     await session.delete(entry)
     await session.commit()
     return True
-
-
-# --- Daily Calorie Goal ------------------------------------------------------
-
-async def get_or_create_calorie_goal(session: AsyncSession, user_id: int) -> DailyCalorieGoal:
-    result = await session.execute(
-        select(DailyCalorieGoal).where(DailyCalorieGoal.user_id == user_id)
-    )
-    goal = result.scalar_one_or_none()
-    if not goal:
-        goal = DailyCalorieGoal(user_id=user_id, daily_goal=2000)
-        session.add(goal)
-        await session.commit()
-        await session.refresh(goal)
-    return goal
-
-
-async def update_calorie_goal(
-    session: AsyncSession, user_id: int, data: DailyCalorieGoalUpdate
-) -> DailyCalorieGoal:
-    goal = await get_or_create_calorie_goal(session, user_id)
-    goal.daily_goal = data.daily_goal
-    session.add(goal)
-    await session.commit()
-    await session.refresh(goal)
-    return goal
 
 
 async def update_food_log(

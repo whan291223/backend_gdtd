@@ -21,7 +21,7 @@ async def create_patient_profile(session: AsyncSession, user_id: int, patient_da
         existing_diseases=patient_data.existing_diseases,
         smoking=patient_data.smoking,
         alcohol=patient_data.alcohol,
-        activity_level=patient_data.activity_level,
+        urine_amount=patient_data.urine_amount,
     )
     session.add(profile)
     await session.commit()
