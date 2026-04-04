@@ -1,7 +1,7 @@
 # test/test_nutrition.py
 
 import unittest
-from services.nutrition_service import calculate_nutrition_targets, get_naf_recommendations
+from services.nutrition_service import calculate_nutrition_targets
 
 class TestNutritionService(unittest.TestCase):
     def test_calculate_targets_with_weight(self):
@@ -31,26 +31,6 @@ class TestNutritionService(unittest.TestCase):
         targets = calculate_nutrition_targets(0)
         self.assertEqual(targets["calories_min"], 0)
         self.assertEqual(targets["protein_min"], 0.0)
-
-    def test_naf_recommendations_high(self):
-        res = get_naf_recommendations(11)
-        self.assertEqual(res["naf_level"], "high")
-        self.assertIn("อาหารให้พลังงานสูง (โยเกิร์ตเสริมโปรตีน, สมูทตี้โปรตีน)", res["naf_recommendations"])
-
-    def test_naf_recommendations_moderate(self):
-        res = get_naf_recommendations(6)
-        self.assertEqual(res["naf_level"], "moderate")
-        self.assertIn("เน้นโปรตีนคุณภาพ (ปลา ไก่ เต้าหู้)", res["naf_recommendations"])
-
-    def test_naf_recommendations_low(self):
-        res = get_naf_recommendations(5)
-        self.assertEqual(res["naf_level"], "low")
-        self.assertIn("ทานอาหารหลากหลายครบ 5 หมู่", res["naf_recommendations"])
-
-    def test_naf_recommendations_unknown(self):
-        res = get_naf_recommendations(None)
-        self.assertEqual(res["naf_level"], "unknown")
-        self.assertEqual(len(res["naf_recommendations"]), 0)
 
 if __name__ == "__main__":
     unittest.main()

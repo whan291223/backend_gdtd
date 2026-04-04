@@ -43,8 +43,6 @@ class SpentNafScoreRead(BaseModel):
     user_answer_naf: Optional["NafAnswers"] = None
     naf_score: Optional[int]
     naf_score_breakdown: Optional["NafScoreBreakdown"] = None
-    naf_level: Optional[str] = None
-    naf_recommendations: Optional[List[str]] = None
     status: str
     submitted_at: Optional[datetime]
 
