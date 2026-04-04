@@ -127,7 +127,7 @@ class PatientProfile(SQLModel, table=True):
 
     smoking: str
     alcohol: str
-    activity_level: str
+    urine_amount: Optional[float]= Field(default=None)
 
     updated_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc)
