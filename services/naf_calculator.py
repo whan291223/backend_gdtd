@@ -88,15 +88,10 @@ def calculate_naf_score(answers: NafAnswers) -> Tuple[int, NafScoreBreakdown]:
     
     # Disease severity 3 points
     breakdown.disease_severity3 = len(answers.disease_severity3) * 3
-    if answers.disease_severity3_other and answers.disease_severity3_other.strip():
-        other_diseases = [d.strip() for d in answers.disease_severity3_other.split(',') if d.strip()]
-        breakdown.disease_severity3 += len(other_diseases) * 3
-    
+
     # Disease severity 6 points
     breakdown.disease_severity6 = len(answers.disease_severity6) * 6
-    if answers.disease_severity6_other and answers.disease_severity6_other.strip():
-        other_diseases = [d.strip() for d in answers.disease_severity6_other.split(',') if d.strip()]
-        breakdown.disease_severity6 += len(other_diseases) * 6
+    
     
     # Calculate total
     breakdown.total = (

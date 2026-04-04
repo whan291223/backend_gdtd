@@ -65,9 +65,7 @@ class NafAnswers(BaseModel):
     eating_problem: List[str]
     food_access: List[str]
     disease_severity3: List[str]
-    disease_severity3_other: str
     disease_severity6: List[str]
-    disease_severity6_other: str
 #to be done
 class SpentNafSummary(BaseModel):
     model_config = common_config
