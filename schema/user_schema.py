@@ -24,6 +24,6 @@ class UserRead(SQLModel):
 
     id: int
     line_user_id: str
-    display_name: Optional[str]
-    picture_url: Optional[str]
-    real_name: Optional[str]
+    display_name: Optional[str] = None
+    picture_url: Optional[str] = None
+    real_name: Optional[str] = None

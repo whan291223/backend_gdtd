@@ -30,7 +30,7 @@ class FoodLogRead(BaseModel):
     phosphorus: float
     meal_category: str
     eaten_date: str
-    created_at: Optional[datetime]
+    created_at: Optional[datetime] = None
 
 
 class ExerciseLogCreate(BaseModel):
@@ -51,7 +51,7 @@ class ExerciseLogRead(BaseModel):
     duration_minutes: int
     calories_burned: float
     logged_date: str
-    created_at: Optional[datetime]
+    created_at: Optional[datetime] = None
 
 
 class FoodLogUpdate(BaseModel):
@@ -78,7 +78,7 @@ class FoodLogEntry(BaseModel):
     phosphorus: float
     meal_category: str
     eaten_date: str
-    created_at: Optional[datetime]
+    created_at: Optional[datetime] = None
 
 
 class ExerciseLogEntry(BaseModel):
@@ -89,4 +89,4 @@ class ExerciseLogEntry(BaseModel):
     duration_minutes: int
     calories_burned: float
     logged_date: str
-    created_at: Optional[datetime]
+    created_at: Optional[datetime] = None

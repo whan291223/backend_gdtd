@@ -26,23 +26,23 @@ class PatientManagementRow(BaseModel):
 
     user_id: int
     line_user_id: str
-    display_name: Optional[str]
-    picture_url: Optional[str]
-    first_name: Optional[str]
-    last_name: Optional[str]
-    age: Optional[int]
-    gender: Optional[str]
-    phone: Optional[str]
-    height: Optional[float]
-    weight: Optional[float]
-    bmi: Optional[float]
-    blood_pressure: Optional[str]
-    existing_diseases: Optional[List[str]]
-    smoking: Optional[str]
-    alcohol: Optional[str]
-    urine_amount: Optional[float]
-    latest_spent: Optional[SpentNafSummary]
-    latest_blood_test: Optional[BloodTestSummary]
+    display_name: Optional[str] = None
+    picture_url: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    age: Optional[int] = None
+    gender: Optional[str] = None
+    phone: Optional[str] = None
+    height: Optional[float] = None
+    weight: Optional[float] = None
+    bmi: Optional[float] = None
+    blood_pressure: Optional[str] = None
+    existing_diseases: Optional[List[str]] = None
+    smoking: Optional[str] = None
+    alcohol: Optional[str] = None
+    urine_amount: Optional[float] = None
+    latest_spent: Optional[SpentNafSummary] = None
+    latest_blood_test: Optional[BloodTestSummary] = None
     total_screenings: int
 
 
@@ -52,22 +52,22 @@ class PatientDetail(BaseModel):
     # Identity
     user_id: int
     line_user_id: str
-    display_name: Optional[str]
-    picture_url: Optional[str]
+    display_name: Optional[str] = None
+    picture_url: Optional[str] = None
     # Profile
-    first_name: Optional[str]
-    last_name: Optional[str]
-    age: Optional[int]
-    gender: Optional[str]
-    phone: Optional[str]
-    height: Optional[float]
-    weight: Optional[float]
-    bmi: Optional[float]
-    blood_pressure: Optional[str]
-    existing_diseases: Optional[List[str]]
-    smoking: Optional[str]
-    alcohol: Optional[str]
-    urine_amount: Optional[float]
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    age: Optional[int] = None
+    gender: Optional[str] = None
+    phone: Optional[str] = None
+    height: Optional[float] = None
+    weight: Optional[float] = None
+    bmi: Optional[float] = None
+    blood_pressure: Optional[str] = None
+    existing_diseases: Optional[List[str]] = None
+    smoking: Optional[str] = None
+    alcohol: Optional[str] = None
+    urine_amount: Optional[float] = None
     # Full histories
     spent_naf_history: List[SpentNafSummary]
     blood_test_history: List[BloodTestSummary]

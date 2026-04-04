@@ -38,13 +38,13 @@ class SpentNafScoreRead(BaseModel):
     id: int
     user_id: int
     user_answer_spent: List[int]
-    spent_score: Optional[int]
-    is_high_risk: Optional[bool]
+    spent_score: Optional[int] = None
+    is_high_risk: Optional[bool] = None
     user_answer_naf: Optional["NafAnswers"] = None
-    naf_score: Optional[int]
+    naf_score: Optional[int] = None
     naf_score_breakdown: Optional["NafScoreBreakdown"] = None
     status: str
-    submitted_at: Optional[datetime]
+    submitted_at: Optional[datetime] = None
 
 class NafAnswers(BaseModel):
     model_config = common_config
@@ -72,12 +72,12 @@ class SpentNafSummary(BaseModel):
 
     id: int
     user_answer_spent: List[int]
-    spent_score: Optional[int]
-    is_high_risk: Optional[bool]
-    naf_score: Optional[int]
+    spent_score: Optional[int] = None
+    is_high_risk: Optional[bool] = None
+    naf_score: Optional[int] = None
     naf_score_breakdown: Optional["NafScoreBreakdown"] = None
     status: str
-    submitted_at: Optional[datetime]
+    submitted_at: Optional[datetime] = None
 
 # NAF Score Breakdown - shows how the score was calculated
 class NafScoreBreakdown(BaseModel):

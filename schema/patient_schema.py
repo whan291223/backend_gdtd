@@ -62,7 +62,7 @@ class PatientProfileRead(BaseModel):
 
     height: float
     weight: float
-    bmi: Optional[float]
+    bmi: Optional[float] = None
     blood_pressure: str
 
     existing_diseases: List[str]
