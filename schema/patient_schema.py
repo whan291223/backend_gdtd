@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import List, Optional
 from schema.config import common_config
+from schema.nutrition_schema import NutritionTargets
 
 
 class PatientProfileBase(BaseModel):
@@ -69,3 +70,5 @@ class PatientProfileRead(BaseModel):
     smoking: str
     alcohol: str
     urine_amount: float
+
+    nutrition_targets: Optional[NutritionTargets] = None

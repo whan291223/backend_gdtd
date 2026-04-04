@@ -16,6 +16,7 @@ from schema.spent_naf_schema import (
     SpentNafScoreRead,
 )
 from services.naf_calculator import calculate_naf_score
+
 router = APIRouter(prefix="/test", tags=["test"])
 
 
