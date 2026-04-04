@@ -21,7 +21,7 @@ class PatientProfileBase(BaseModel):
 
     smoking: str
     alcohol: str
-    urine_amount: float
+    urine_amount: Optional[float] = None
 
 
 class PatientProfileCreate(PatientProfileBase):
@@ -69,6 +69,6 @@ class PatientProfileRead(BaseModel):
 
     smoking: str
     alcohol: str
-    urine_amount: float
+    urine_amount: Optional[float] = None
 
     nutrition_targets: Optional[NutritionTargets] = None
