@@ -74,7 +74,8 @@ class SpentNafSummary(BaseModel):
     user_answer_spent: List[int]
     spent_score: Optional[int]
     is_high_risk: Optional[bool]
-    naf_score: Optional[int]
+    user_answer_naf: Optional["NafAnswers"] = None
+    naf_score: Optional[int] = None
     naf_score_breakdown: Optional["NafScoreBreakdown"] = None
     status: str
     submitted_at: Optional[datetime]

@@ -127,7 +127,9 @@ async def list_patients(
                 user_answer_spent=latest_score.user_answer_spent,
                 spent_score=latest_score.spent_score,
                 is_high_risk=latest_score.is_high_risk,
+                user_answer_naf=latest_score.user_answer_naf,
                 naf_score=latest_score.naf_score,
+                naf_score_breakdown=latest_score.naf_score_breakdown,
                 status=latest_score.status,
                 submitted_at=latest_score.submitted_at,
             ) if latest_score else None,
@@ -227,7 +229,7 @@ async def get_patient_detail(
         spent_naf_history=[
             SpentNafSummary(
                 id=s.id, user_answer_spent=s.user_answer_spent, spent_score=s.spent_score, is_high_risk=s.is_high_risk,
-                naf_score=s.naf_score, status=s.status, submitted_at=s.submitted_at,
+                user_answer_naf=s.user_answer_naf, naf_score=s.naf_score, naf_score_breakdown=s.naf_score_breakdown, status=s.status, submitted_at=s.submitted_at,
             ) for s in scores
         ],
         blood_test_history=[
@@ -241,7 +243,7 @@ async def get_patient_detail(
         food_log_history=[
             FoodLogEntry(
                 id=f.id, food_name=f.food_name, calories=f.calories, protein=f.protein,
-                sodium=f.sodium, potassium=f.potassium, phosphorus=f.phosphorus,
+                sodium=f.sodium, potassium=f.potassium, phosphorus=f.phosphorus, volume=f.volume,
                 meal_category=f.meal_category, eaten_date=f.eaten_date, created_at=f.created_at,
             ) for f in food_logs
         ],
@@ -380,7 +382,7 @@ async def admin_update_patient_profile(
         spent_naf_history=[
             SpentNafSummary(
                 id=s.id, user_answer_spent=s.user_answer_spent, spent_score=s.spent_score, is_high_risk=s.is_high_risk,
-                naf_score=s.naf_score, status=s.status, submitted_at=s.submitted_at,
+                user_answer_naf=s.user_answer_naf, naf_score=s.naf_score, naf_score_breakdown=s.naf_score_breakdown, status=s.status, submitted_at=s.submitted_at,
             ) for s in scores
         ],
         blood_test_history=[
@@ -394,7 +396,7 @@ async def admin_update_patient_profile(
         food_log_history=[
             FoodLogEntry(
                 id=f.id, food_name=f.food_name, calories=f.calories, protein=f.protein,
-                sodium=f.sodium, potassium=f.potassium, phosphorus=f.phosphorus,
+                sodium=f.sodium, potassium=f.potassium, phosphorus=f.phosphorus, volume=f.volume,
                 meal_category=f.meal_category, eaten_date=f.eaten_date, created_at=f.created_at,
             ) for f in food_logs
         ],
