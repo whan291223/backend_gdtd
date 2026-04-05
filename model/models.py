@@ -80,6 +80,7 @@ class FoodLog(SQLModel, table=True):
     phosphorus: float = Field(default=0)    # mg
     meal_category: str = Field(default="Snack")  # Breakfast | Lunch | Dinner | Snack
     eaten_date: str = Field(default_factory=lambda: datetime.now(timezone.utc).strftime("%Y-%m-%d"))
+    volume: Optional[float] = Field(default=None)
     created_at: Optional[datetime] = Field(
         default_factory=lambda: datetime.now(timezone.utc)
     )
