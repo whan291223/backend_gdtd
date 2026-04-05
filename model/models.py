@@ -122,7 +122,10 @@ class PatientProfile(SQLModel, table=True):
     smoking: str
     alcohol: str
     urine_amount: Optional[float]= Field(default=None)
-
+    nutrition_targets: Optional[Dict[str, Any]] = Field(
+        default=None,
+        sa_column=Column(JSON, nullable=True)
+    )
     updated_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc)
     )
