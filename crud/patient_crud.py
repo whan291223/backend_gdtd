@@ -2,11 +2,11 @@ from sqlmodel import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from model.models import PatientProfile
 from schema.patient_schema import PatientProfileCreate, PatientProfileUpdate
-
+from services.nutrition_calculator import calculate_nutrition_targets
 
 async def create_patient_profile(session: AsyncSession, user_id: int, patient_data: PatientProfileCreate):
     bmi = patient_data.weight / ((patient_data.height / 100) ** 2)
-
+    nutrition_targets = calculate_nutrition_targets(patient_data.weight, patient_data.urine_amount)
     profile = PatientProfile(
         user_id=user_id,
         first_name=patient_data.first_name,
@@ -22,6 +22,7 @@ async def create_patient_profile(session: AsyncSession, user_id: int, patient_da
         smoking=patient_data.smoking,
         alcohol=patient_data.alcohol,
         urine_amount=patient_data.urine_amount,
+        nutrition_targets=nutrition_targets
     )
     session.add(profile)
     await session.commit()
@@ -45,6 +46,8 @@ async def update_patient_profile(session: AsyncSession, profile: PatientProfile,
     # recalc BMI if needed
     if profile.height and profile.weight:
         profile.bmi = profile.weight / ((profile.height / 100) ** 2)
+    if profile.weight and profile.urine_amount:
+        profile.nutrition_targets = calculate_nutrition_targets(profile.weight, profile.urine_amount)
 
     session.add(profile)
     await session.commit()
