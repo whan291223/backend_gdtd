@@ -13,6 +13,7 @@ class FoodLogCreate(BaseModel):
     sodium: float = 0
     potassium: float = 0
     phosphorus: float = 0
+    volume: Optional[float] = None
     meal_category: str = "Snack"
     eaten_date: str  # "YYYY-MM-DD"
 
@@ -28,6 +29,7 @@ class FoodLogRead(BaseModel):
     sodium: float
     potassium: float
     phosphorus: float
+    volume: Optional[float] = None
     meal_category: str
     eaten_date: str
     created_at: Optional[datetime]
@@ -63,6 +65,7 @@ class FoodLogUpdate(BaseModel):
     sodium: Optional[float] = None
     potassium: Optional[float] = None
     phosphorus: Optional[float] = None
+    volume: Optional[float] = None
     meal_category: Optional[str] = None
 
 
@@ -76,6 +79,7 @@ class FoodLogEntry(BaseModel):
     sodium: float
     potassium: float
     phosphorus: float
+    volume: Optional[float] = None
     meal_category: str
     eaten_date: str
     created_at: Optional[datetime]

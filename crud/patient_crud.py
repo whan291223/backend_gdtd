@@ -46,7 +46,7 @@ async def update_patient_profile(session: AsyncSession, profile: PatientProfile,
     # recalc BMI if needed
     if profile.height and profile.weight:
         profile.bmi = profile.weight / ((profile.height / 100) ** 2)
-    if profile.weight and profile.urine_amount:
+    if (profile.weight and profile.urine_amount) or profile.urine_amount is None:
         profile.nutrition_targets = calculate_nutrition_targets(profile.weight, profile.urine_amount)
 
     session.add(profile)
