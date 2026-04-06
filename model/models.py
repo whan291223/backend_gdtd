@@ -1,9 +1,9 @@
 from typing import List, Optional, Dict, Any
-from sqlmodel import Field, SQLModel, Column
-from sqlalchemy import ARRAY, Integer, String, Text, JSON
+from sqlmodel import Field, SQLModel, Column, Relationship
+from sqlalchemy import ARRAY, Integer, String, Text, JSON, Date
 from sqlalchemy.dialects.postgresql import ARRAY as PG_ARRAY
 
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date
 
 
 class User(SQLModel, table=True):
@@ -15,7 +15,7 @@ class User(SQLModel, table=True):
     real_name: Optional[str] = None
     surname: Optional[str] = None
 
-
+    # daily_setups: List["DailySetup"] = Relationship(back_populates="user")
 class SpentNafScore(SQLModel, table=True):
     __tablename__ = "user_answer_table"
 
@@ -85,6 +85,15 @@ class FoodLog(SQLModel, table=True):
         default_factory=lambda: datetime.now(timezone.utc)
     )
 
+class DailySetup(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(index=True, foreign_key="user.id")
+    weight: float    
+    urine_amount: Optional[float] = Field(default=None)
+    setup_date: date = Field(sa_column=Column(Date, nullable=False, index=True))
+
+    # Use Relationship from sqlmodel for better compatibility
+    # user: "User" = Relationship(back_populates="daily_setups")
 
 class ExerciseLog(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
