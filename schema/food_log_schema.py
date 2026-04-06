@@ -94,3 +94,17 @@ class ExerciseLogEntry(BaseModel):
     calories_burned: float
     logged_date: str
     created_at: Optional[datetime]
+
+class DailySetupCreate(BaseModel):
+    weight: float
+    urine_amount: Optional[float] = None
+    setup_date: str  # YYYY-MM-DD
+
+class DailySetupUpdate(BaseModel):
+    weight: Optional[float] = None
+    urine_amount: Optional[float] = None
+
+class DailySetupRead(BaseModel):
+    weight: float
+    urine_amount: Optional[float] = None
+    setup_date: str  # YYYY-MM-DD
