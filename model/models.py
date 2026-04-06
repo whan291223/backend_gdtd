@@ -1,9 +1,9 @@
 from typing import List, Optional, Dict, Any
 from sqlmodel import Field, SQLModel, Column, Relationship
-from sqlalchemy import ARRAY, Integer, String, Text, JSON, Date
+from sqlalchemy import ARRAY, Integer, String, Text, JSON
 from sqlalchemy.dialects.postgresql import ARRAY as PG_ARRAY
 
-from datetime import datetime, timezone, date
+from datetime import datetime, timezone
 
 
 class User(SQLModel, table=True):
@@ -90,8 +90,7 @@ class DailySetup(SQLModel, table=True):
     user_id: int = Field(index=True, foreign_key="user.id")
     weight: float    
     urine_amount: Optional[float] = Field(default=None)
-    setup_date: date = Field(sa_column=Column(Date, nullable=False, index=True))
-
+    setup_date: str = Field(default_factory=lambda: datetime.now(timezone.utc).strftime("%Y-%m-%d"))
     # Use Relationship from sqlmodel for better compatibility
     # user: "User" = Relationship(back_populates="daily_setups")
 
