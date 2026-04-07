@@ -42,7 +42,7 @@ async def get_setup_by_date(
     
     return DailySetupRead(
         weight=setup.weight,
-        urine_amountount=setup.urine_amount,
+        urine_amount=setup.urine_amount,
         setup_date=str(setup.setup_date)
     )
 

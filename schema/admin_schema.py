@@ -3,7 +3,7 @@ from typing import List, Optional
 from datetime import datetime
 from schema.blood_test_schema import BloodTestSummary
 from schema.spent_naf_schema import SpentNafSummary
-from schema.food_log_schema import FoodLogEntry, ExerciseLogEntry
+from schema.food_log_schema import FoodLogEntry, ExerciseLogEntry, DailySetupRead
 from schema.config import common_config
 
 
@@ -68,6 +68,8 @@ class PatientDetail(BaseModel):
     smoking: Optional[str]
     alcohol: Optional[str]
     urine_amount: Optional[float]
+    # Profile today
+    daily_setup: Optional[DailySetupRead] = None
     # Full histories
     spent_naf_history: List[SpentNafSummary]
     blood_test_history: List[BloodTestSummary]

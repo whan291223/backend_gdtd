@@ -96,15 +96,18 @@ class ExerciseLogEntry(BaseModel):
     created_at: Optional[datetime]
 
 class DailySetupCreate(BaseModel):
+    model_config = common_config
     weight: float
     urine_amount: Optional[float] = None
     setup_date: str  # YYYY-MM-DD
 
 class DailySetupUpdate(BaseModel):
+    model_config = common_config
     weight: Optional[float] = None
     urine_amount: Optional[float] = None
 
 class DailySetupRead(BaseModel):
+    model_config = common_config
     weight: float
     urine_amount: Optional[float] = None
     setup_date: str  # YYYY-MM-DD

@@ -2,7 +2,10 @@ from sqlmodel import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from model.models import PatientProfile
 from schema.patient_schema import PatientProfileCreate, PatientProfileUpdate
+from schema.food_log_schema import DailySetupUpdate
+from crud.food_log_crud import update_daily_setup
 from services.nutrition_calculator import calculate_nutrition_targets
+from datetime import datetime, timezone
 
 async def create_patient_profile(session: AsyncSession, user_id: int, patient_data: PatientProfileCreate):
     bmi = patient_data.weight / ((patient_data.height / 100) ** 2)
@@ -48,6 +51,15 @@ async def update_patient_profile(session: AsyncSession, profile: PatientProfile,
         profile.bmi = profile.weight / ((profile.height / 100) ** 2)
     if (profile.weight and profile.urine_amount) or profile.urine_amount is None:
         profile.nutrition_targets = calculate_nutrition_targets(profile.weight, profile.urine_amount)
+
+    # Also update daily setup for weight and urine_amount if they were provided
+    if data.weight is not None or data.urine_amount is not None:
+        setup_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        daily_update = DailySetupUpdate(
+            weight=data.weight,
+            urine_amount=data.urine_amount
+        )
+        await update_daily_setup(session, profile.user_id, setup_date, daily_update)
 
     session.add(profile)
     await session.commit()

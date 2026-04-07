@@ -14,7 +14,8 @@ from schema.admin_schema import (
 )
 from schema.blood_test_schema import BloodTestCreate, BloodTestSummary
 from schema.spent_naf_schema import SpentNafSummary
-from schema.food_log_schema import FoodLogEntry, ExerciseLogEntry
+from schema.food_log_schema import FoodLogEntry, ExerciseLogEntry, DailySetupRead
+from crud.food_log_crud import get_daily_setup
 import secrets
 import hashlib
 from crud.patient_crud import update_patient_profile  # Add this to your imports
@@ -226,6 +227,11 @@ async def get_patient_detail(
         smoking=profile.smoking if profile else None,
         alcohol=profile.alcohol if profile else None,
         urine_amount=profile.urine_amount if profile else None,
+        daily_setup=DailySetupRead(
+            weight=daily.weight,
+            urine_amount=daily.urine_amount,
+            setup_date=daily.setup_date
+        ) if (daily := await get_daily_setup(session, user_id, datetime.now(timezone.utc).strftime("%Y-%m-%d"))) else None,
         spent_naf_history=[
             SpentNafSummary(
                 id=s.id, user_answer_spent=s.user_answer_spent, spent_score=s.spent_score, is_high_risk=s.is_high_risk,
@@ -379,6 +385,11 @@ async def admin_update_patient_profile(
         smoking=profile.smoking,
         alcohol=profile.alcohol,
         urine_amount=profile.urine_amount,
+        daily_setup=DailySetupRead(
+            weight=daily.weight,
+            urine_amount=daily.urine_amount,
+            setup_date=daily.setup_date
+        ) if (daily := await get_daily_setup(session, user_id, datetime.now(timezone.utc).strftime("%Y-%m-%d"))) else None,
         spent_naf_history=[
             SpentNafSummary(
                 id=s.id, user_answer_spent=s.user_answer_spent, spent_score=s.spent_score, is_high_risk=s.is_high_risk,
