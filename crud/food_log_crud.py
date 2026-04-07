@@ -113,8 +113,8 @@ async def create_daily_setup(
     setup = DailySetup(
         user_id=user_id,
         setup_date=setup_date,
-        weight=data.weight if hasattr(data, 'weight') and data.weight else 0,
-        urine_amount=data.urine_amount if hasattr(data, 'urineAmount') else None
+        weight=data.weight if hasattr(data, "weight") and data.weight else 0,
+        urine_amount=data.urine_amount if hasattr(data, "urine_amount") else None,
     )
     session.add(setup)
     await session.commit()
@@ -130,13 +130,11 @@ async def update_daily_setup(
     """Update or create daily setup for a specific date"""
     # Try to get existing setup
     setup = await get_daily_setup(session, user_id, setup_date)
-    print("hello")
     if setup:
-        # Update existing
+        # Update existing - only if values are not None
         if data.weight is not None:
             setup.weight = data.weight
-        if data.urine_amount is not None:
-            setup.urine_amount = data.urine_amount
+        setup.urine_amount = data.urine_amount
         await session.commit()
         await session.refresh(setup)
         return setup
