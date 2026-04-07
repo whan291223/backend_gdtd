@@ -134,8 +134,7 @@ async def update_daily_setup(
         # Update existing - only if values are not None
         if data.weight is not None:
             setup.weight = data.weight
-        if data.urine_amount is not None:
-            setup.urine_amount = data.urine_amount
+        setup.urine_amount = data.urine_amount
         await session.commit()
         await session.refresh(setup)
         return setup

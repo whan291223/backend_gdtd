@@ -51,16 +51,12 @@ async def update_patient_profile(session: AsyncSession, profile: PatientProfile,
         profile.bmi = profile.weight / ((profile.height / 100) ** 2)
     if (profile.weight and profile.urine_amount) or profile.urine_amount is None:
         profile.nutrition_targets = calculate_nutrition_targets(profile.weight, profile.urine_amount)
-
-    # Also update daily setup for weight and urine_amount if they were provided
-    if data.weight is not None or data.urine_amount is not None:
         setup_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         daily_update = DailySetupUpdate(
-            weight=data.weight,
-            urine_amount=data.urine_amount
-        )
+                weight=data.weight,
+                urine_amount=data.urine_amount
+            )
         await update_daily_setup(session, profile.user_id, setup_date, daily_update)
-
     session.add(profile)
     await session.commit()
     await session.refresh(profile)
