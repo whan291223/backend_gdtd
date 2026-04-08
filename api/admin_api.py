@@ -12,6 +12,14 @@ from schema.admin_schema import (
     PatientManagementRow,
     PatientDetail,
 )
+from schema.lab_schema import (
+    LabCategoryRead,
+    LabCategoryUpdate,
+    LabRecordRead,
+    LabRecordCreate,
+    LabValueRead,
+    LabFieldRead
+)
 from schema.blood_test_schema import BloodTestCreate, BloodTestSummary
 from schema.spent_naf_schema import SpentNafSummary
 from schema.food_log_schema import FoodLogEntry, ExerciseLogEntry, DailySetupRead
@@ -19,6 +27,7 @@ from crud.food_log_crud import get_daily_setup
 import secrets
 import hashlib
 from crud.patient_crud import update_patient_profile  # Add this to your imports
+from crud.lab_crud import get_lab_config, update_lab_config, create_lab_record, delete_lab_record, get_lab_history
 from schema.patient_schema import PatientProfileUpdate
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
@@ -157,6 +166,29 @@ async def list_patients(
 
 # --- Patient detail endpoint -------------------------------------------------
 
+# --- Lab Config --------------------------------------------------------------
+
+@router.get("/lab-config", response_model=List[LabCategoryRead])
+async def admin_get_lab_config(
+    session: AsyncSession = Depends(get_session),
+    _: str = Depends(verify_token),
+):
+    return await get_lab_config(session)
+
+
+@router.put("/lab-config", response_model=List[LabCategoryRead])
+async def admin_update_lab_config(
+    payload: List[LabCategoryUpdate],
+    session: AsyncSession = Depends(get_session),
+    _: str = Depends(verify_token),
+):
+    await update_lab_config(session, payload)
+    # Return updated config
+    return await get_lab_config(session)
+
+
+# --- Patient detail endpoint -------------------------------------------------
+
 @router.get("/patients/{user_id}", response_model=PatientDetail)
 async def get_patient_detail(
     user_id: int,
@@ -209,6 +241,10 @@ async def get_patient_detail(
     )
     exercise_logs = exercise_result.scalars().all()
 
+    # Lab history and config
+    lab_history = await get_lab_history(session, user_id)
+    lab_config = await get_lab_config(session)
+
     return PatientDetail(
         user_id=user.id,
         line_user_id=user.line_user_id,
@@ -227,38 +263,13 @@ async def get_patient_detail(
         smoking=profile.smoking if profile else None,
         alcohol=profile.alcohol if profile else None,
         urine_amount=profile.urine_amount if profile else None,
-        daily_setup=DailySetupRead(
-            weight=daily.weight,
-            urine_amount=daily.urine_amount,
-            setup_date=daily.setup_date
-        ) if (daily := await get_daily_setup(session, user_id, datetime.now(timezone.utc).strftime("%Y-%m-%d"))) else None,
-        spent_naf_history=[
-            SpentNafSummary(
-                id=s.id, user_answer_spent=s.user_answer_spent, spent_score=s.spent_score, is_high_risk=s.is_high_risk,
-                user_answer_naf=s.user_answer_naf, naf_score=s.naf_score, naf_score_breakdown=s.naf_score_breakdown, status=s.status, submitted_at=s.submitted_at,
-            ) for s in scores
-        ],
-        blood_test_history=[
-            BloodTestSummary(
-                id=b.id, serum_albumin=b.serum_albumin, npcr=b.npcr, bun=b.bun,
-                creatinine=b.creatinine, cholesterol=b.cholesterol, hemoglobin=b.hemoglobin,
-                hematocrit=b.hematocrit, potassium=b.potassium, phosphorus=b.phosphorus,
-                bicarbonate=b.bicarbonate, note=b.note, recorded_at=b.recorded_at,
-            ) for b in blood_tests
-        ],
-        food_log_history=[
-            FoodLogEntry(
-                id=f.id, food_name=f.food_name, calories=f.calories, protein=f.protein,
-                sodium=f.sodium, potassium=f.potassium, phosphorus=f.phosphorus, volume=f.volume,
-                meal_category=f.meal_category, eaten_date=f.eaten_date, created_at=f.created_at,
-            ) for f in food_logs
-        ],
-        exercise_log_history=[
-            ExerciseLogEntry(
-                id=e.id, exercise_name=e.exercise_name, duration_minutes=e.duration_minutes,
-                calories_burned=e.calories_burned, logged_date=e.logged_date, created_at=e.created_at,
-            ) for e in exercise_logs
-        ],
+        daily_setup=DailySetupRead.model_validate(daily, from_attributes=True) if (daily := await get_daily_setup(session, user_id, datetime.now(timezone.utc).strftime("%Y-%m-%d"))) else None,
+        spent_naf_history=[SpentNafSummary.model_validate(s, from_attributes=True) for s in scores],
+        blood_test_history=[BloodTestSummary.model_validate(b, from_attributes=True) for b in blood_tests],
+        food_log_history=[FoodLogEntry.model_validate(f, from_attributes=True) for f in food_logs],
+        exercise_log_history=[ExerciseLogEntry.model_validate(e, from_attributes=True) for e in exercise_logs],
+        lab_history=[LabRecordRead.model_validate(lr, from_attributes=True) for lr in lab_history],
+        lab_config=[LabCategoryRead.model_validate(lc, from_attributes=True) for lc in lab_config]
     )
 
 
@@ -303,6 +314,37 @@ async def admin_delete_blood_test(
         raise HTTPException(status_code=404, detail="Blood test record not found")
     await session.delete(record)
     await session.commit()
+
+# --- Lab Record management for admin -----------------------------------------
+
+@router.post("/patients/{user_id}/lab-record", response_model=LabRecordRead)
+async def admin_add_lab_record(
+    user_id: int,
+    data: LabRecordCreate,
+    session: AsyncSession = Depends(get_session),
+    _: str = Depends(verify_token),
+):
+    """Admin can manually add a lab record for a patient."""
+    user_result = await session.execute(select(User).where(User.id == user_id))
+    if not user_result.scalar_one_or_none():
+        raise HTTPException(status_code=404, detail="User not found")
+
+    record = await create_lab_record(session, user_id, data)
+
+    return LabRecordRead.model_validate(record, from_attributes=True)
+
+
+@router.delete("/lab-record/{lab_record_id}", status_code=204)
+async def admin_delete_lab_record(
+    lab_record_id: int,
+    session: AsyncSession = Depends(get_session),
+    _: str = Depends(verify_token),
+):
+    """Admin can delete a specific lab record."""
+    success = await delete_lab_record(session, lab_record_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Lab record not found")
+
 
 # To be done Admin edit user profile and screen ing update in dashboard still shown 0
 @router.put("/patients/{user_id}", response_model=PatientDetail)
@@ -367,6 +409,10 @@ async def admin_update_patient_profile(
     # Refresh profile to get updated BMI
     await session.refresh(profile)
 
+    # Lab history and config
+    lab_history = await get_lab_history(session, user_id)
+    lab_config = await get_lab_config(session)
+
     return PatientDetail(
         user_id=user.id,
         line_user_id=user.line_user_id,
@@ -385,36 +431,11 @@ async def admin_update_patient_profile(
         smoking=profile.smoking,
         alcohol=profile.alcohol,
         urine_amount=profile.urine_amount,
-        daily_setup=DailySetupRead(
-            weight=daily.weight,
-            urine_amount=daily.urine_amount,
-            setup_date=daily.setup_date
-        ) if (daily := await get_daily_setup(session, user_id, datetime.now(timezone.utc).strftime("%Y-%m-%d"))) else None,
-        spent_naf_history=[
-            SpentNafSummary(
-                id=s.id, user_answer_spent=s.user_answer_spent, spent_score=s.spent_score, is_high_risk=s.is_high_risk,
-                user_answer_naf=s.user_answer_naf, naf_score=s.naf_score, naf_score_breakdown=s.naf_score_breakdown, status=s.status, submitted_at=s.submitted_at,
-            ) for s in scores
-        ],
-        blood_test_history=[
-            BloodTestSummary(
-                id=b.id, serum_albumin=b.serum_albumin, npcr=b.npcr, bun=b.bun,
-                creatinine=b.creatinine, cholesterol=b.cholesterol, hemoglobin=b.hemoglobin,
-                hematocrit=b.hematocrit, potassium=b.potassium, phosphorus=b.phosphorus,
-                bicarbonate=b.bicarbonate, note=b.note, recorded_at=b.recorded_at,
-            ) for b in blood_tests
-        ],
-        food_log_history=[
-            FoodLogEntry(
-                id=f.id, food_name=f.food_name, calories=f.calories, protein=f.protein,
-                sodium=f.sodium, potassium=f.potassium, phosphorus=f.phosphorus, volume=f.volume,
-                meal_category=f.meal_category, eaten_date=f.eaten_date, created_at=f.created_at,
-            ) for f in food_logs
-        ],
-        exercise_log_history=[
-            ExerciseLogEntry(
-                id=e.id, exercise_name=e.exercise_name, duration_minutes=e.duration_minutes,
-                calories_burned=e.calories_burned, logged_date=e.logged_date, created_at=e.created_at,
-            ) for e in exercise_logs
-        ],
+        daily_setup=DailySetupRead.model_validate(daily, from_attributes=True) if (daily := await get_daily_setup(session, user_id, datetime.now(timezone.utc).strftime("%Y-%m-%d"))) else None,
+        spent_naf_history=[SpentNafSummary.model_validate(s, from_attributes=True) for s in scores],
+        blood_test_history=[BloodTestSummary.model_validate(b, from_attributes=True) for b in blood_tests],
+        food_log_history=[FoodLogEntry.model_validate(f, from_attributes=True) for f in food_logs],
+        exercise_log_history=[ExerciseLogEntry.model_validate(e, from_attributes=True) for e in exercise_logs],
+        lab_history=[LabRecordRead.model_validate(lr, from_attributes=True) for lr in lab_history],
+        lab_config=[LabCategoryRead.model_validate(lc, from_attributes=True) for lc in lab_config]
     )

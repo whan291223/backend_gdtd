@@ -1,4 +1,6 @@
 from typing import List, Optional, Dict, Any
+import uuid
+from uuid import UUID as UUID_TYPE
 from sqlmodel import Field, SQLModel, Column, Relationship
 from sqlalchemy import ARRAY, Integer, String, Text, JSON
 from sqlalchemy.dialects.postgresql import ARRAY as PG_ARRAY
@@ -148,3 +150,63 @@ class FoodDatabase(SQLModel, table=True):
     sodium: float = Field(default=0)     # mg
     potassium: float = Field(default=0)  # mg
     phosphorus: float = Field(default=0) # mg
+
+
+class LabCategory(SQLModel, table=True):
+    __tablename__ = "lab_categories"
+
+    id: UUID_TYPE = Field(default_factory=uuid.uuid4, primary_key=True)
+    name: str
+    display_order: Optional[int] = None
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
+
+    fields: List["LabField"] = Relationship(
+        back_populates="category",
+        sa_relationship_kwargs={"cascade": "all, delete-orphan", "order_by": "LabField.display_order"}
+    )
+
+
+class LabField(SQLModel, table=True):
+    __tablename__ = "lab_fields"
+
+    id: UUID_TYPE = Field(default_factory=uuid.uuid4, primary_key=True)
+    category_id: UUID_TYPE = Field(foreign_key="lab_categories.id")
+    name: str
+    unit: str
+    display_order: Optional[int] = None
+
+    category: LabCategory = Relationship(back_populates="fields")
+    values: List["LabValue"] = Relationship(back_populates="field")
+
+
+class LabRecord(SQLModel, table=True):
+    __tablename__ = "lab_records"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(index=True, foreign_key="user.id")
+    recorded_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
+    note: Optional[str] = Field(default=None, sa_column=Column(Text, nullable=True))
+
+    values: List["LabValue"] = Relationship(
+        back_populates="record",
+        sa_relationship_kwargs={"cascade": "all, delete-orphan"}
+    )
+
+
+class LabValue(SQLModel, table=True):
+    __tablename__ = "lab_values"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    record_id: int = Field(foreign_key="lab_records.id")
+    field_id: UUID_TYPE = Field(foreign_key="lab_fields.id")
+    value: Optional[float] = Field(default=None)
+
+    record: LabRecord = Relationship(back_populates="values")
+    field: LabField = Relationship(back_populates="values")
