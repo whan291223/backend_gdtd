@@ -263,13 +263,13 @@ async def get_patient_detail(
         smoking=profile.smoking if profile else None,
         alcohol=profile.alcohol if profile else None,
         urine_amount=profile.urine_amount if profile else None,
-        daily_setup=DailySetupRead.model_validate(daily) if (daily := await get_daily_setup(session, user_id, datetime.now(timezone.utc).strftime("%Y-%m-%d"))) else None,
-        spent_naf_history=[SpentNafSummary.model_validate(s) for s in scores],
-        blood_test_history=[BloodTestSummary.model_validate(b) for b in blood_tests],
-        food_log_history=[FoodLogEntry.model_validate(f) for f in food_logs],
-        exercise_log_history=[ExerciseLogEntry.model_validate(e) for e in exercise_logs],
-        lab_history=[LabRecordRead.model_validate(lr) for lr in lab_history],
-        lab_config=[LabCategoryRead.model_validate(lc) for lc in lab_config]
+        daily_setup=DailySetupRead.model_validate(daily, from_attributes=True) if (daily := await get_daily_setup(session, user_id, datetime.now(timezone.utc).strftime("%Y-%m-%d"))) else None,
+        spent_naf_history=[SpentNafSummary.model_validate(s, from_attributes=True) for s in scores],
+        blood_test_history=[BloodTestSummary.model_validate(b, from_attributes=True) for b in blood_tests],
+        food_log_history=[FoodLogEntry.model_validate(f, from_attributes=True) for f in food_logs],
+        exercise_log_history=[ExerciseLogEntry.model_validate(e, from_attributes=True) for e in exercise_logs],
+        lab_history=[LabRecordRead.model_validate(lr, from_attributes=True) for lr in lab_history],
+        lab_config=[LabCategoryRead.model_validate(lc, from_attributes=True) for lc in lab_config]
     )
 
 
@@ -431,11 +431,11 @@ async def admin_update_patient_profile(
         smoking=profile.smoking,
         alcohol=profile.alcohol,
         urine_amount=profile.urine_amount,
-        daily_setup=DailySetupRead.model_validate(daily) if (daily := await get_daily_setup(session, user_id, datetime.now(timezone.utc).strftime("%Y-%m-%d"))) else None,
-        spent_naf_history=[SpentNafSummary.model_validate(s) for s in scores],
-        blood_test_history=[BloodTestSummary.model_validate(b) for b in blood_tests],
-        food_log_history=[FoodLogEntry.model_validate(f) for f in food_logs],
-        exercise_log_history=[ExerciseLogEntry.model_validate(e) for e in exercise_logs],
-        lab_history=[LabRecordRead.model_validate(lr) for lr in lab_history],
-        lab_config=[LabCategoryRead.model_validate(lc) for lc in lab_config]
+        daily_setup=DailySetupRead.model_validate(daily, from_attributes=True) if (daily := await get_daily_setup(session, user_id, datetime.now(timezone.utc).strftime("%Y-%m-%d"))) else None,
+        spent_naf_history=[SpentNafSummary.model_validate(s, from_attributes=True) for s in scores],
+        blood_test_history=[BloodTestSummary.model_validate(b, from_attributes=True) for b in blood_tests],
+        food_log_history=[FoodLogEntry.model_validate(f, from_attributes=True) for f in food_logs],
+        exercise_log_history=[ExerciseLogEntry.model_validate(e, from_attributes=True) for e in exercise_logs],
+        lab_history=[LabRecordRead.model_validate(lr, from_attributes=True) for lr in lab_history],
+        lab_config=[LabCategoryRead.model_validate(lc, from_attributes=True) for lc in lab_config]
     )
