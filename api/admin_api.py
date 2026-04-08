@@ -176,14 +176,15 @@ async def admin_get_lab_config(
     return await get_lab_config(session)
 
 
-@router.put("/lab-config")
+@router.put("/lab-config", response_model=List[LabCategoryRead])
 async def admin_update_lab_config(
     payload: List[LabCategoryUpdate],
     session: AsyncSession = Depends(get_session),
     _: str = Depends(verify_token),
 ):
     await update_lab_config(session, payload)
-    return {"message": "Lab configuration updated"}
+    # Return updated config
+    return await get_lab_config(session)
 
 
 # --- Patient detail endpoint -------------------------------------------------
