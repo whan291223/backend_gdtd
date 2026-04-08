@@ -331,7 +331,7 @@ async def admin_add_lab_record(
 
     record = await create_lab_record(session, user_id, data)
 
-    return LabRecordRead.model_validate(record)
+    return LabRecordRead.model_validate(record, from_attributes=True)
 
 
 @router.delete("/lab-record/{lab_record_id}", status_code=204)

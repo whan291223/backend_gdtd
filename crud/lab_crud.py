@@ -99,7 +99,8 @@ async def create_lab_record(session: AsyncSession, user_id: int, data: LabRecord
         session.add(lab_value)
 
     await session.commit()
-    await session.refresh(record)
+    # Refresh with explicit relationship loading
+    await session.refresh(record, attribute_names=["values"])
     return record
 
 
