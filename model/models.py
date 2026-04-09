@@ -181,8 +181,11 @@ class LabField(SQLModel, table=True):
     display_order: Optional[int] = None
 
     category: LabCategory = Relationship(back_populates="fields")
-    values: List["LabValue"] = Relationship(back_populates="field")
-
+    # Add cascade delete
+    values: List["LabValue"] = Relationship(
+        back_populates="field",
+        sa_relationship_kwargs={"cascade": "all, delete-orphan"}
+    )
 
 class LabRecord(SQLModel, table=True):
     __tablename__ = "lab_records"
