@@ -112,6 +112,7 @@ class FoodDatabaseCreate(BaseModel):
     sodium: float = 0
     potassium: float = 0
     phosphorus: float = 0
+    volume: Optional[float] = None
 
 
 class FoodDatabaseUpdate(BaseModel):
@@ -122,6 +123,7 @@ class FoodDatabaseUpdate(BaseModel):
     sodium: Optional[float] = None
     potassium: Optional[float] = None
     phosphorus: Optional[float] = None
+    volume: Optional[float] = None
 
 
 class FoodDatabaseRead(BaseModel):
@@ -133,6 +135,7 @@ class FoodDatabaseRead(BaseModel):
     sodium: float
     potassium: float
     phosphorus: float
+    volume: Optional[float] = None
 
 
 # --- Exercise Database -------------------------------------------------------

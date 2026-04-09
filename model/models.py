@@ -150,6 +150,7 @@ class FoodDatabase(SQLModel, table=True):
     sodium: float = Field(default=0)     # mg
     potassium: float = Field(default=0)  # mg
     phosphorus: float = Field(default=0) # mg
+    volume: Optional[float] = Field(default=None)
 
 
 class ExerciseDatabase(SQLModel, table=True):
