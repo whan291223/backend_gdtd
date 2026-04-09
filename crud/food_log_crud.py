@@ -101,7 +101,7 @@ async def get_daily_setup(
         DailySetup.setup_date == setup_date
     )
     result = await session.execute(stmt)
-    return result.scalar_one_or_none()
+    return result.scalars().first()
 
 async def create_daily_setup(
     session: AsyncSession,

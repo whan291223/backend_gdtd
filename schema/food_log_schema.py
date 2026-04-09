@@ -168,3 +168,19 @@ class DailySetupRead(BaseModel):
     weight: float
     urine_amount: Optional[float] = None
     setup_date: str  # YYYY-MM-DD
+
+class ExerciseItem(BaseModel):
+    id: int
+    name: str
+    met: float
+
+
+class FoodItem(BaseModel):
+    id: int
+    name: str
+    calories: float
+    protein: float
+    sodium: float
+    potassium: float
+    phosphorus: float
+    volume: Optional[float]
