@@ -152,6 +152,13 @@ class FoodDatabase(SQLModel, table=True):
     phosphorus: float = Field(default=0) # mg
 
 
+class ExerciseDatabase(SQLModel, table=True):
+    __tablename__ = "exercise_database"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str = Field(index=True, unique=True)
+    met: float = Field(description="MET value used for calorie calculation")
+
+
 class LabCategory(SQLModel, table=True):
     __tablename__ = "lab_categories"
 

@@ -101,6 +101,60 @@ class DailySetupCreate(BaseModel):
     urine_amount: Optional[float] = None
     setup_date: str  # YYYY-MM-DD
 
+
+# --- Food Database -----------------------------------------------------------
+
+class FoodDatabaseCreate(BaseModel):
+    model_config = common_config
+    name: str
+    calories: float
+    protein: float = 0
+    sodium: float = 0
+    potassium: float = 0
+    phosphorus: float = 0
+
+
+class FoodDatabaseUpdate(BaseModel):
+    model_config = common_config
+    name: Optional[str] = None
+    calories: Optional[float] = None
+    protein: Optional[float] = None
+    sodium: Optional[float] = None
+    potassium: Optional[float] = None
+    phosphorus: Optional[float] = None
+
+
+class FoodDatabaseRead(BaseModel):
+    model_config = common_config
+    id: int
+    name: str
+    calories: float
+    protein: float
+    sodium: float
+    potassium: float
+    phosphorus: float
+
+
+# --- Exercise Database -------------------------------------------------------
+
+class ExerciseDatabaseCreate(BaseModel):
+    model_config = common_config
+    name: str
+    met: float
+
+
+class ExerciseDatabaseUpdate(BaseModel):
+    model_config = common_config
+    name: Optional[str] = None
+    met: Optional[float] = None
+
+
+class ExerciseDatabaseRead(BaseModel):
+    model_config = common_config
+    id: int
+    name: str
+    met: float
+
 class DailySetupUpdate(BaseModel):
     model_config = common_config
     weight: Optional[float] = None
