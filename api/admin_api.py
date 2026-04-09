@@ -5,7 +5,7 @@ from typing import List, Dict
 from datetime import datetime, timedelta, timezone
 from core.db import get_session
 from core.config import settings
-from model.models import User, PatientProfile, SpentNafScore, BloodTest
+from model.models import User, PatientProfile, SpentNafScore, BloodTest, FoodDatabase, ExerciseDatabase
 from schema.admin_schema import (
     AdminLoginRequest,
     AdminLoginResponse,
@@ -22,13 +22,19 @@ from schema.lab_schema import (
 )
 from schema.blood_test_schema import BloodTestCreate, BloodTestSummary
 from schema.spent_naf_schema import SpentNafSummary
-from schema.food_log_schema import FoodLogEntry, ExerciseLogEntry, DailySetupRead
+from schema.food_log_schema import (
+    FoodLogEntry, ExerciseLogEntry, DailySetupRead,
+    FoodDatabaseCreate, FoodDatabaseUpdate, FoodDatabaseRead,
+    ExerciseDatabaseCreate, ExerciseDatabaseUpdate, ExerciseDatabaseRead
+)
 from crud.food_log_crud import get_daily_setup
 import secrets
 import hashlib
 from crud.patient_crud import update_patient_profile  # Add this to your imports
 from crud.lab_crud import get_lab_config, update_lab_config, create_lab_record, delete_lab_record, get_lab_history
 from schema.patient_schema import PatientProfileUpdate
+from sqlalchemy.exc import IntegrityError
+
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
 # token -> {"username": str, "created_at": datetime}
@@ -271,6 +277,138 @@ async def get_patient_detail(
         lab_history=[LabRecordRead.model_validate(lr, from_attributes=True) for lr in lab_history],
         lab_config=[LabCategoryRead.model_validate(lc, from_attributes=True) for lc in lab_config]
     )
+
+
+# --- Food Database Management (Admin) ----------------------------------------
+
+@router.get("/food-database", response_model=List[FoodDatabaseRead])
+async def admin_get_food_database(
+    session: AsyncSession = Depends(get_session),
+    _: str = Depends(verify_token),
+):
+    result = await session.execute(select(FoodDatabase).order_by(FoodDatabase.name))
+    return result.scalars().all()
+
+
+@router.post("/food-database", response_model=FoodDatabaseRead)
+async def admin_add_food_database(
+    payload: FoodDatabaseCreate,
+    session: AsyncSession = Depends(get_session),
+    _: str = Depends(verify_token),
+):
+    food = FoodDatabase(**payload.model_dump())
+    session.add(food)
+    try:
+        await session.commit()
+    except IntegrityError:
+        await session.rollback()
+        raise HTTPException(status_code=400, detail="Food name already exists")
+    await session.refresh(food)
+    return food
+
+
+@router.put("/food-database/{id}", response_model=FoodDatabaseRead)
+async def admin_update_food_database(
+    id: int,
+    payload: FoodDatabaseUpdate,
+    session: AsyncSession = Depends(get_session),
+    _: str = Depends(verify_token),
+):
+    result = await session.execute(select(FoodDatabase).where(FoodDatabase.id == id))
+    food = result.scalar_one_or_none()
+    if not food:
+        raise HTTPException(status_code=404, detail="Food item not found")
+
+    for key, value in payload.model_dump(exclude_unset=True).items():
+        setattr(food, key, value)
+
+    try:
+        await session.commit()
+    except IntegrityError:
+        await session.rollback()
+        raise HTTPException(status_code=400, detail="Food name already exists")
+    await session.refresh(food)
+    return food
+
+
+@router.delete("/food-database/{id}", status_code=204)
+async def admin_delete_food_database(
+    id: int,
+    session: AsyncSession = Depends(get_session),
+    _: str = Depends(verify_token),
+):
+    result = await session.execute(select(FoodDatabase).where(FoodDatabase.id == id))
+    food = result.scalar_one_or_none()
+    if not food:
+        raise HTTPException(status_code=404, detail="Food item not found")
+    await session.delete(food)
+    await session.commit()
+
+
+# --- Exercise Database Management (Admin) ------------------------------------
+
+@router.get("/exercise-database", response_model=List[ExerciseDatabaseRead])
+async def admin_get_exercise_database(
+    session: AsyncSession = Depends(get_session),
+    _: str = Depends(verify_token),
+):
+    result = await session.execute(select(ExerciseDatabase).order_by(ExerciseDatabase.name))
+    return result.scalars().all()
+
+
+@router.post("/exercise-database", response_model=ExerciseDatabaseRead)
+async def admin_add_exercise_database(
+    payload: ExerciseDatabaseCreate,
+    session: AsyncSession = Depends(get_session),
+    _: str = Depends(verify_token),
+):
+    exercise = ExerciseDatabase(**payload.model_dump())
+    session.add(exercise)
+    try:
+        await session.commit()
+    except IntegrityError:
+        await session.rollback()
+        raise HTTPException(status_code=400, detail="Exercise name already exists")
+    await session.refresh(exercise)
+    return exercise
+
+
+@router.put("/exercise-database/{id}", response_model=ExerciseDatabaseRead)
+async def admin_update_exercise_database(
+    id: int,
+    payload: ExerciseDatabaseUpdate,
+    session: AsyncSession = Depends(get_session),
+    _: str = Depends(verify_token),
+):
+    result = await session.execute(select(ExerciseDatabase).where(ExerciseDatabase.id == id))
+    exercise = result.scalar_one_or_none()
+    if not exercise:
+        raise HTTPException(status_code=404, detail="Exercise item not found")
+
+    for key, value in payload.model_dump(exclude_unset=True).items():
+        setattr(exercise, key, value)
+
+    try:
+        await session.commit()
+    except IntegrityError:
+        await session.rollback()
+        raise HTTPException(status_code=400, detail="Exercise name already exists")
+    await session.refresh(exercise)
+    return exercise
+
+
+@router.delete("/exercise-database/{id}", status_code=204)
+async def admin_delete_exercise_database(
+    id: int,
+    session: AsyncSession = Depends(get_session),
+    _: str = Depends(verify_token),
+):
+    result = await session.execute(select(ExerciseDatabase).where(ExerciseDatabase.id == id))
+    exercise = result.scalar_one_or_none()
+    if not exercise:
+        raise HTTPException(status_code=404, detail="Exercise item not found")
+    await session.delete(exercise)
+    await session.commit()
 
 
 # --- Blood test management for admin -----------------------------------------
