@@ -30,11 +30,11 @@ app.add_middleware(
 
 BASE_DIR = Path(__file__).resolve().parent
 
-app.mount(
-    "/static",
-    StaticFiles(directory=BASE_DIR / "static"),
-    name="static"
-)
+# app.mount(
+#     "/static",
+#     StaticFiles(directory=BASE_DIR / "static"),
+#     name="static"
+# )
 
 @app.get("/", tags=["Root"])
 def read_root():
