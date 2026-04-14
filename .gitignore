@@ -11,3 +11,5 @@ wheels/
 #secret
 .env
 note.md
+seed.py
+init.py
