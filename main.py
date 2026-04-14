@@ -17,7 +17,8 @@ app.include_router(patient_api.router, prefix="/api/v0.1")
 app.include_router(admin_api.router, prefix="/api/v0.1")
 origins = [
     "http://localhost:5173",
-    "localhost:5173"
+    "localhost:5173",
+    "https://ckd-web-app.pages.dev"
 ]
 
 app.add_middleware(
