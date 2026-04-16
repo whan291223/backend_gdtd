@@ -14,6 +14,7 @@ from crud.patient_crud import (
     delete_patient_profile,
 )
 from crud.crud_user import get_user_by_line_id
+from core.auth import verify_line_user
 
 router = APIRouter(prefix="/patient-profile", tags=["PatientProfile"])
 
@@ -32,7 +33,10 @@ async def create_profile(
     line_user_id: str,
     data: PatientProfileCreate,
     session: AsyncSession = Depends(get_session),
+    verified_line_id: str = Depends(verify_line_user)
 ):
+    if line_user_id != verified_line_id:
+        raise HTTPException(status_code=403, detail="Access denied")
     user_id = await get_user_id_or_404(line_user_id, session)
     
     # Prevent duplicate profiles
@@ -48,7 +52,10 @@ async def create_profile(
 async def read_profile(
     line_user_id: str,
     session: AsyncSession = Depends(get_session),
+    verified_line_id: str = Depends(verify_line_user)
 ):
+    if line_user_id != verified_line_id:
+        raise HTTPException(status_code=403, detail="Access denied")
     user_id = await get_user_id_or_404(line_user_id, session)
     profile = await get_patient_profile(session, user_id)
 
@@ -64,7 +71,10 @@ async def update_profile(
     line_user_id: str,
     data: PatientProfileUpdate,
     session: AsyncSession = Depends(get_session),
+    verified_line_id: str = Depends(verify_line_user)
 ):
+    if line_user_id != verified_line_id:
+        raise HTTPException(status_code=403, detail="Access denied")
     user_id = await get_user_id_or_404(line_user_id, session)
     profile = await get_patient_profile(session, user_id)
 
@@ -79,7 +89,10 @@ async def update_profile(
 async def delete_profile(
     line_user_id: str,
     session: AsyncSession = Depends(get_session),
+    verified_line_id: str = Depends(verify_line_user)
 ):
+    if line_user_id != verified_line_id:
+        raise HTTPException(status_code=403, detail="Access denied")
     user_id = await get_user_id_or_404(line_user_id, session)
     profile = await get_patient_profile(session, user_id)
 

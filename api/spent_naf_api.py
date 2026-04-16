@@ -10,6 +10,7 @@ from crud.spent_naf_crud import (
     delete_session_by_id,
 )
 from crud.crud_user import get_user_by_line_id
+from core.auth import verify_line_user
 from schema.spent_naf_schema import (
     SpentSubmit, SpentSubmitResponse,
     NafAnswers, NafSubmitResponse,
@@ -32,7 +33,10 @@ async def submit_spent(
     line_user_id: str,
     spent_answer: SpentSubmit,
     session: AsyncSession = Depends(get_session),
+    verified_line_id: str = Depends(verify_line_user)
 ):
+    if line_user_id != verified_line_id:
+        raise HTTPException(status_code=403, detail="Access denied")
     user_id = await get_user_id_or_404(line_user_id, session)
 
     score = sum(spent_answer.answers)
@@ -54,10 +58,18 @@ async def submit_naf(
     test_session_id: int,
     naf_answers: NafAnswers,
     session: AsyncSession = Depends(get_session),
+    verified_line_id: str = Depends(verify_line_user)
 ):
     record = await get_test_record(session, test_session_id)
     if not record:
         raise HTTPException(status_code=404, detail="Session not found")
+
+    # Check ownership
+    from model.models import User
+    user = await session.get(User, record.user_id)
+    if not user or user.line_user_id != verified_line_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+
     if not record.is_high_risk:
         raise HTTPException(status_code=400, detail="User is not high risk, NAF not required")
     if record.status == "completed":
@@ -86,10 +98,18 @@ async def submit_naf(
 async def get_test_record_by_id(
     test_session_id: int,
     db: AsyncSession = Depends(get_session),
+    verified_line_id: str = Depends(verify_line_user)
 ):
     record = await get_test_record(db, test_session_id)
     if not record:
         raise HTTPException(status_code=404, detail="Session not found")
+
+    # Check ownership
+    from model.models import User
+    user = await db.get(User, record.user_id)
+    if not user or user.line_user_id != verified_line_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+
     return record
 
 
@@ -97,7 +117,10 @@ async def get_test_record_by_id(
 async def get_history(
     line_user_id: str,
     session: AsyncSession = Depends(get_session),
+    verified_line_id: str = Depends(verify_line_user)
 ):
+    if line_user_id != verified_line_id:
+        raise HTTPException(status_code=403, detail="Access denied")
     user_id = await get_user_id_or_404(line_user_id, session)
     return await get_history_by_user_id(session, user_id)
 
@@ -106,8 +129,16 @@ async def get_history(
 async def delete_session(
     test_session_id: int,
     session: AsyncSession = Depends(get_session),
+    verified_line_id: str = Depends(verify_line_user)
 ):
     record = await get_test_record(session, test_session_id)
     if not record:
         raise HTTPException(status_code=404, detail="Session not found")
+
+    # Check ownership
+    from model.models import User
+    user = await session.get(User, record.user_id)
+    if not user or user.line_user_id != verified_line_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+
     await delete_session_by_id(session, record)
