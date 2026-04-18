@@ -1,6 +1,6 @@
 from sqlmodel import select
 from model.models import User
-from schema.user_schema import UserCreate, UserUpdate
+from schema.user_schema import UserCreate
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 async def get_user_by_line_id(session: AsyncSession, line_user_id: str):
@@ -14,18 +14,4 @@ async def create_user(session: AsyncSession, user_data: UserCreate):
     session.add(user)
     await session.commit()
     await session.refresh(user)
-    return user
-
-
-async def update_user_profile(
-    db: AsyncSession,
-    user: User,                  # the actual user object fetched from DB
-    user_update: UserUpdate,     # the pydantic schema with new values
-) -> User:
-    user.real_name = user_update.real_name
-    user.surname = user_update.surname   # ← add surname
-
-    db.add(user)
-    await db.commit()
-    await db.refresh(user)
     return user

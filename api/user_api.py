@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel.ext.asyncio.session import AsyncSession
-from schema.user_schema import UserCreate, UserUpdate
-from crud.crud_user import get_user_by_line_id, create_user, update_user_profile
+from schema.user_schema import UserCreate
+from crud.crud_user import get_user_by_line_id, create_user
 from core.db import get_session
 from fastapi.responses import JSONResponse
 from core.config import settings
@@ -42,19 +42,3 @@ async def get_user_profile(
     return user
 
 
-@router.put("/{line_user_id}")
-async def update_user(
-    line_user_id: str,
-    user_update: UserUpdate,
-    session: AsyncSession = Depends(get_session),
-    verified_line_id: str = Depends(verify_line_user)
-):
-    if line_user_id != verified_line_id:
-        raise HTTPException(status_code=403, detail="Access denied")
-
-    user = await get_user_by_line_id(session, line_user_id)
-
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    return await update_user_profile(session, user, user_update)

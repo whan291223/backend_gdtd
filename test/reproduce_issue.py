@@ -11,9 +11,7 @@ def test_user_create():
     data = {
         "lineUserId": "U123456",
         "displayName": "John Doe",
-        "pictureUrl": "http://example.com/pic.jpg",
-        "realName": "John",
-        "surname": "Doe"
+        "pictureUrl": "http://example.com/pic.jpg"
     }
     user = UserCreate(**data)
     assert user.line_user_id == "U123456"
