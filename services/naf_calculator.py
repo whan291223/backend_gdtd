@@ -64,27 +64,22 @@ def calculate_naf_score(answers: NafAnswers) -> Tuple[int, NafScoreBreakdown]:
         breakdown.food_access += 1
     
     # Swallow problems
-    for val in answers.swallow_problem:
-        if val == "immobile":
-            breakdown.swallow_problem += 2
-        elif val == "limited":
-            breakdown.swallow_problem += 1
+    if "immobile" in answers.swallow_problem:
+        breakdown.swallow_problem += 2
+    if "limited" in answers.swallow_problem:
+        breakdown.swallow_problem += 2
     
     # Intestine problems
-    for val in answers.intestine_problem:
-        if val == "severe":
-            breakdown.intestine_problem += 3
-        elif val == "moderate":
-            breakdown.intestine_problem += 2
-        elif val == "mild":
-            breakdown.intestine_problem += 1
+    if "severe" in answers.intestine_problem: #ท้องเสีย
+        breakdown.intestine_problem += 2
+    if "moderate" in answers.intestine_problem: #ปวดท้อง
+        breakdown.intestine_problem += 2
     
     # Eating problems
-    for val in answers.eating_problem:
-        if val == "poor":
-            breakdown.eating_problem += 2
-        elif val == "reduced":
-            breakdown.eating_problem += 1
+    if "poor" in answers.eating_problem: #อาเจียน
+        breakdown.eating_problem += 2
+    if "reduced" in answers.eating_problem: #คลื่นไส้
+        breakdown.eating_problem += 2
     
     # Disease severity 3 points
     breakdown.disease_severity3 = len(answers.disease_severity3) * 3
