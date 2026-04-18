@@ -18,7 +18,7 @@ async def verify_line_user(auth: HTTPAuthorizationCredentials = Depends(security
                 "https://api.line.me/oauth2/v2.1/verify",
                 data={
                     "id_token": id_token,
-                    "client_id": settings.LIFF_ID
+                    "client_id": settings.LINE_CHANNEL_ID
                 }
             )
 
