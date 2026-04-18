@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 from core.db import get_session
 from crud.crud_user import get_user_by_line_id
+from core.auth import verify_line_user
 from crud.food_log_crud import (
     update_food_log,
     add_food_log, get_food_logs_by_date, delete_food_log,
@@ -34,7 +35,10 @@ async def get_setup_by_date(
     line_user_id: str,
     setup_date: str,  # YYYY-MM-DD
     session: AsyncSession = Depends(get_session),
+    verified_line_id: str = Depends(verify_line_user)
 ):
+    if line_user_id != verified_line_id:
+        raise HTTPException(status_code=403, detail="Access denied")
     user_id = await get_user_id_or_404(line_user_id, session)
     setup = await get_daily_setup(session, user_id, setup_date)
     if not setup:
@@ -53,7 +57,10 @@ async def update_setup(
     setup_date: str,  # YYYY-MM-DD
     data: DailySetupUpdate,
     session: AsyncSession = Depends(get_session),
+    verified_line_id: str = Depends(verify_line_user)
 ):
+    if line_user_id != verified_line_id:
+        raise HTTPException(status_code=403, detail="Access denied")
     user_id = await get_user_id_or_404(line_user_id, session)
     setup = await update_daily_setup(session, user_id, setup_date, data)
     
@@ -71,7 +78,10 @@ async def log_food(
     line_user_id: str,
     data: FoodLogCreate,
     session: AsyncSession = Depends(get_session),
+    verified_line_id: str = Depends(verify_line_user)
 ):
+    if line_user_id != verified_line_id:
+        raise HTTPException(status_code=403, detail="Access denied")
     user_id = await get_user_id_or_404(line_user_id, session)
     return await add_food_log(session, user_id, data)
 
@@ -81,7 +91,10 @@ async def get_food_by_date(
     line_user_id: str,
     date: str,  # YYYY-MM-DD
     session: AsyncSession = Depends(get_session),
+    verified_line_id: str = Depends(verify_line_user)
 ):
+    if line_user_id != verified_line_id:
+        raise HTTPException(status_code=403, detail="Access denied")
     user_id = await get_user_id_or_404(line_user_id, session)
     return await get_food_logs_by_date(session, user_id, date)
 
@@ -92,7 +105,10 @@ async def edit_food(
     entry_id: int,
     data: FoodLogUpdate,
     session: AsyncSession = Depends(get_session),
+    verified_line_id: str = Depends(verify_line_user)
 ):
+    if line_user_id != verified_line_id:
+        raise HTTPException(status_code=403, detail="Access denied")
     user_id = await get_user_id_or_404(line_user_id, session)
     entry = await update_food_log(session, entry_id, user_id, data)
     if not entry:
@@ -105,7 +121,10 @@ async def remove_food(
     line_user_id: str,
     entry_id: int,
     session: AsyncSession = Depends(get_session),
+    verified_line_id: str = Depends(verify_line_user)
 ):
+    if line_user_id != verified_line_id:
+        raise HTTPException(status_code=403, detail="Access denied")
     user_id = await get_user_id_or_404(line_user_id, session)
     deleted = await delete_food_log(session, entry_id, user_id)
     if not deleted:
@@ -119,7 +138,10 @@ async def log_exercise(
     line_user_id: str,
     data: ExerciseLogCreate,
     session: AsyncSession = Depends(get_session),
+    verified_line_id: str = Depends(verify_line_user)
 ):
+    if line_user_id != verified_line_id:
+        raise HTTPException(status_code=403, detail="Access denied")
     user_id = await get_user_id_or_404(line_user_id, session)
     return await add_exercise_log(session, user_id, data)
 
@@ -129,7 +151,10 @@ async def get_exercise_by_date(
     line_user_id: str,
     date: str,
     session: AsyncSession = Depends(get_session),
+    verified_line_id: str = Depends(verify_line_user)
 ):
+    if line_user_id != verified_line_id:
+        raise HTTPException(status_code=403, detail="Access denied")
     user_id = await get_user_id_or_404(line_user_id, session)
     return await get_exercise_logs_by_date(session, user_id, date)
 
@@ -139,7 +164,10 @@ async def remove_exercise(
     line_user_id: str,
     entry_id: int,
     session: AsyncSession = Depends(get_session),
+    verified_line_id: str = Depends(verify_line_user)
 ):
+    if line_user_id != verified_line_id:
+        raise HTTPException(status_code=403, detail="Access denied")
     user_id = await get_user_id_or_404(line_user_id, session)
     deleted = await delete_exercise_log(session, entry_id, user_id)
     if not deleted:

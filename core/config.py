@@ -4,6 +4,7 @@ class Setting(BaseSettings):
     # DATABASE_URL: str = "postgressql+asyncpg://user:password@host/dbname"
     DATABASE_URL: str
     LIFF_ID: str
+    LINE_CHANNEL_ID:str
     ADMIN_USERNAME: str
     ADMIN_PASSWORD: str
     # STRIPE_SECRET_KEY: str
