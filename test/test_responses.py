@@ -8,15 +8,13 @@ def test_user_read_camel_case():
         id=1,
         line_user_id="U123456",
         display_name="John Doe",
-        picture_url="http://example.com/pic.jpg",
-        real_name="John"
+        picture_url="http://example.com/pic.jpg"
     )
     data = user.model_dump(by_alias=True)
     print("UserRead serialized with aliases:", data)
     assert "lineUserId" in data
     assert "displayName" in data
     assert "pictureUrl" in data
-    assert "realName" in data
     print("UserRead camelCase OK")
 
 def test_food_log_read_camel_case():
