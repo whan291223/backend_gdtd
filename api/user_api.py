@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel.ext.asyncio.session import AsyncSession
-from schema.user_schema import UserCreate
+from schema.user_schema import UserCreate, UserRead
 from crud.crud_user import get_user_by_line_id, create_user
 from core.db import get_session
 from fastapi.responses import JSONResponse
@@ -13,11 +13,11 @@ router = APIRouter(prefix="/users", tags=["users"])
 async def get_liff_id():
     return JSONResponse({"liffId": settings.LIFF_ID})
 
-@router.post("/create_user_profile")
+@router.post("/create_user_profile", response_model=UserRead)
 async def create_user_profile(
     user_data: UserCreate,
     session: AsyncSession = Depends(get_session),
-    verified_line_id: str = Depends(verify_line_user)
+    verified_line_id: str = Depends(verify_line_user),
 ):
     if user_data.line_user_id != verified_line_id:
         raise HTTPException(status_code=403, detail="Line ID mismatch")
@@ -29,11 +29,11 @@ async def create_user_profile(
 
     return user
 
-@router.get("/{line_user_id}")
+@router.get("/{line_user_id}", response_model=UserRead)
 async def get_user_profile(
     line_user_id: str,
     session: AsyncSession = Depends(get_session),
-    verified_line_id: str = Depends(verify_line_user)
+    verified_line_id: str = Depends(verify_line_user),
 ):
     if line_user_id != verified_line_id:
         raise HTTPException(status_code=403, detail="Access denied")
