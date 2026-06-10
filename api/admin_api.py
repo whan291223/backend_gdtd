@@ -21,7 +21,11 @@ from schema.lab_schema import (
     LabFieldRead
 )
 from schema.blood_test_schema import BloodTestCreate, BloodTestSummary
-from schema.spent_naf_schema import SpentNafSummary
+from schema.spent_naf_schema import (
+    SpentNafSummary, SpentSubmitResponse,
+    NafAnswers, NafSubmitResponse
+)
+from schema.nutrition_schema import NutritionTargets
 from schema.food_log_schema import (
     FoodLogEntry, ExerciseLogEntry, DailySetupRead,
     FoodDatabaseCreate, FoodDatabaseUpdate, FoodDatabaseRead,
@@ -30,10 +34,16 @@ from schema.food_log_schema import (
 from crud.food_log_crud import get_daily_setup
 import secrets
 import hashlib
-from crud.patient_crud import update_patient_profile  # Add this to your imports
+from crud.patient_crud import update_patient_profile, create_patient_profile
+from crud.crud_user import get_user_by_line_id, create_user
+from crud.spent_naf_crud import (
+    create_spent_session, update_naf_answers, get_test_record
+)
 from crud.lab_crud import get_lab_config, update_lab_config, create_lab_record, delete_lab_record, get_lab_history
-from schema.patient_schema import PatientProfileUpdate
+from schema.patient_schema import PatientProfileUpdate, PatientProfileCreate
+from schema.user_schema import UserCreate
 from sqlalchemy.exc import IntegrityError
+from services.naf_calculator import calculate_naf_score
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
@@ -82,6 +92,101 @@ async def admin_logout(token: str = Depends(verify_token)):
     if token in _active_tokens:
         del _active_tokens[token]
     return {"message": "Logged out"}
+
+
+# --- Helpers -----------------------------------------------------------------
+
+async def _get_patient_detail(session: AsyncSession, user_id: int) -> PatientDetail:
+    from model.models import FoodLog, ExerciseLog, DailySetup
+
+    user_result = await session.execute(select(User).where(User.id == user_id))
+    user = user_result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    profile_result = await session.execute(
+        select(PatientProfile).where(PatientProfile.user_id == user_id)
+    )
+    profile = profile_result.scalar_one_or_none()
+
+    # SPENT/NAF history — all sessions newest first
+    scores_result = await session.execute(
+        select(SpentNafScore)
+        .where(SpentNafScore.user_id == user_id)
+        .order_by(SpentNafScore.submitted_at.desc())
+    )
+    scores = scores_result.scalars().all()
+
+    # Blood test history — all records newest first
+    blood_result = await session.execute(
+        select(BloodTest)
+        .where(BloodTest.user_id == user_id)
+        .order_by(BloodTest.recorded_at.desc())
+    )
+    blood_tests = blood_result.scalars().all()
+
+    # Food log history — last 30 days newest first
+    food_result = await session.execute(
+        select(FoodLog)
+        .where(FoodLog.user_id == user_id)
+        .order_by(FoodLog.eaten_date.desc(), FoodLog.created_at.desc())
+        .limit(200)
+    )
+    food_logs = food_result.scalars().all()
+
+    # Exercise log history — last 30 days newest first
+    exercise_result = await session.execute(
+        select(ExerciseLog)
+        .where(ExerciseLog.user_id == user_id)
+        .order_by(ExerciseLog.logged_date.desc(), ExerciseLog.created_at.desc())
+        .limit(100)
+    )
+    exercise_logs = exercise_result.scalars().all()
+
+    # Daily Setup history
+    daily_history_result = await session.execute(
+        select(DailySetup)
+        .where(DailySetup.user_id == user_id)
+        .order_by(DailySetup.setup_date.desc())
+        .limit(100)
+    )
+    daily_history = daily_history_result.scalars().all()
+
+    # Lab history and config
+    lab_history = await get_lab_history(session, user_id)
+    lab_config = await get_lab_config(session)
+
+    today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    daily_today = await get_daily_setup(session, user_id, today_str)
+
+    return PatientDetail(
+        user_id=user.id,
+        line_user_id=user.line_user_id,
+        display_name=user.display_name,
+        picture_url=user.picture_url,
+        first_name=profile.first_name if profile else None,
+        last_name=profile.last_name if profile else None,
+        age=profile.age if profile else None,
+        gender=profile.gender if profile else None,
+        phone=profile.phone if profile else None,
+        height=profile.height if profile else None,
+        weight=profile.weight if profile else None,
+        bmi=round(profile.bmi, 2) if profile and profile.bmi else None,
+        blood_pressure=profile.blood_pressure if profile else None,
+        existing_diseases=profile.existing_diseases if profile else None,
+        smoking=profile.smoking if profile else None,
+        alcohol=profile.alcohol if profile else None,
+        urine_amount=profile.urine_amount if profile else None,
+        daily_setup=DailySetupRead.model_validate(daily_today, from_attributes=True) if daily_today else None,
+        spent_naf_history=[SpentNafSummary.model_validate(s, from_attributes=True) for s in scores],
+        blood_test_history=[BloodTestSummary.model_validate(b, from_attributes=True) for b in blood_tests],
+        food_log_history=[FoodLogEntry.model_validate(f, from_attributes=True) for f in food_logs],
+        exercise_log_history=[ExerciseLogEntry.model_validate(e, from_attributes=True) for e in exercise_logs],
+        daily_setup_history=[DailySetupRead.model_validate(d, from_attributes=True) for d in daily_history],
+        lab_history=[LabRecordRead.model_validate(lr, from_attributes=True) for lr in lab_history],
+        lab_config=[LabCategoryRead.model_validate(lc, from_attributes=True) for lc in lab_config],
+        nutrition_targets=NutritionTargets(**profile.nutrition_targets) if profile and profile.nutrition_targets else None
+    )
 
 
 # --- Endpoints ---------------------------------------------------------------
@@ -201,81 +306,96 @@ async def get_patient_detail(
     session: AsyncSession = Depends(get_session),
     _: str = Depends(verify_token),
 ):
-    from model.models import FoodLog, ExerciseLog
+    return await _get_patient_detail(session, user_id)
 
-    user_result = await session.execute(select(User).where(User.id == user_id))
-    user = user_result.scalar_one_or_none()
+
+@router.post("/patients", response_model=PatientDetail)
+async def admin_create_patient(
+    payload: PatientProfileCreate,
+    session: AsyncSession = Depends(get_session),
+    _: str = Depends(verify_token),
+):
+    if not payload.line_user_id:
+        raise HTTPException(status_code=400, detail="lineUserId is required for admin-led creation")
+
+    # Ensure user exists
+    user = await get_user_by_line_id(session, payload.line_user_id)
     if not user:
+        user = await create_user(session, UserCreate(line_user_id=payload.line_user_id))
+
+    # Check if profile already exists
+    profile_result = await session.execute(
+        select(PatientProfile).where(PatientProfile.user_id == user.id)
+    )
+    if profile_result.scalar_one_or_none():
+        raise HTTPException(status_code=400, detail="Patient profile already exists for this user")
+
+    await create_patient_profile(session, user.id, payload)
+    return await _get_patient_detail(session, user.id)
+
+
+@router.post("/patients/{user_id}/spent", response_model=SpentSubmitResponse)
+async def admin_submit_spent(
+    user_id: int,
+    payload: Dict[str, List[int]],
+    session: AsyncSession = Depends(get_session),
+    _: str = Depends(verify_token),
+):
+    answers = payload.get("answers")
+    if answers is None:
+        raise HTTPException(status_code=400, detail="answers list is required")
+
+    # Verify user exists
+    user_result = await session.execute(select(User).where(User.id == user_id))
+    if not user_result.scalar_one_or_none():
         raise HTTPException(status_code=404, detail="User not found")
 
-    profile_result = await session.execute(
-        select(PatientProfile).where(PatientProfile.user_id == user_id)
+    score = sum(answers)
+    is_high_risk = score >= 2
+
+    record = await create_spent_session(
+        session, user_id, answers, score, is_high_risk
     )
-    profile = profile_result.scalar_one_or_none()
-
-    # SPENT/NAF history — all sessions newest first
-    scores_result = await session.execute(
-        select(SpentNafScore)
-        .where(SpentNafScore.user_id == user_id)
-        .order_by(SpentNafScore.submitted_at.desc())
+    return SpentSubmitResponse(
+        session_id=record.id,
+        spent_score=record.spent_score,
+        is_high_risk=record.is_high_risk,
+        status=record.status,
     )
-    scores = scores_result.scalars().all()
 
-    # Blood test history — all records newest first
-    blood_result = await session.execute(
-        select(BloodTest)
-        .where(BloodTest.user_id == user_id)
-        .order_by(BloodTest.recorded_at.desc())
+
+@router.put("/test/naf/{test_session_id}", response_model=NafSubmitResponse)
+async def admin_submit_naf(
+    test_session_id: int,
+    naf_answers: NafAnswers,
+    session: AsyncSession = Depends(get_session),
+    _: str = Depends(verify_token),
+):
+    record = await get_test_record(session, test_session_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    if not record.is_high_risk:
+        raise HTTPException(status_code=400, detail="User is not high risk, NAF not required")
+    if record.status == "completed":
+        raise HTTPException(status_code=400, detail="Session already completed")
+
+    # Calculate score and get breakdown
+    naf_score, breakdown = calculate_naf_score(naf_answers)
+
+    # Update record with breakdown
+    record = await update_naf_answers(
+        session,
+        record,
+        naf_answers,
+        naf_score,
+        breakdown.model_dump()
     )
-    blood_tests = blood_result.scalars().all()
 
-    # Food log history — last 30 days newest first
-    food_result = await session.execute(
-        select(FoodLog)
-        .where(FoodLog.user_id == user_id)
-        .order_by(FoodLog.eaten_date.desc(), FoodLog.created_at.desc())
-        .limit(200)
-    )
-    food_logs = food_result.scalars().all()
-
-    # Exercise log history — last 30 days newest first
-    exercise_result = await session.execute(
-        select(ExerciseLog)
-        .where(ExerciseLog.user_id == user_id)
-        .order_by(ExerciseLog.logged_date.desc(), ExerciseLog.created_at.desc())
-        .limit(100)
-    )
-    exercise_logs = exercise_result.scalars().all()
-
-    # Lab history and config
-    lab_history = await get_lab_history(session, user_id)
-    lab_config = await get_lab_config(session)
-
-    return PatientDetail(
-        user_id=user.id,
-        line_user_id=user.line_user_id,
-        display_name=user.display_name,
-        picture_url=user.picture_url,
-        first_name=profile.first_name if profile else None,
-        last_name=profile.last_name if profile else None,
-        age=profile.age if profile else None,
-        gender=profile.gender if profile else None,
-        phone=profile.phone if profile else None,
-        height=profile.height if profile else None,
-        weight=profile.weight if profile else None,
-        bmi=round(profile.bmi, 2) if profile and profile.bmi else None,
-        blood_pressure=profile.blood_pressure if profile else None,
-        existing_diseases=profile.existing_diseases if profile else None,
-        smoking=profile.smoking if profile else None,
-        alcohol=profile.alcohol if profile else None,
-        urine_amount=profile.urine_amount if profile else None,
-        daily_setup=DailySetupRead.model_validate(daily, from_attributes=True) if (daily := await get_daily_setup(session, user_id, datetime.now(timezone.utc).strftime("%Y-%m-%d"))) else None,
-        spent_naf_history=[SpentNafSummary.model_validate(s, from_attributes=True) for s in scores],
-        blood_test_history=[BloodTestSummary.model_validate(b, from_attributes=True) for b in blood_tests],
-        food_log_history=[FoodLogEntry.model_validate(f, from_attributes=True) for f in food_logs],
-        exercise_log_history=[ExerciseLogEntry.model_validate(e, from_attributes=True) for e in exercise_logs],
-        lab_history=[LabRecordRead.model_validate(lr, from_attributes=True) for lr in lab_history],
-        lab_config=[LabCategoryRead.model_validate(lc, from_attributes=True) for lc in lab_config]
+    return NafSubmitResponse(
+        session_id=record.id,
+        naf_score=record.naf_score,
+        status=record.status,
     )
 
 
@@ -493,15 +613,13 @@ async def admin_update_patient_profile(
     _: str = Depends(verify_token),
 ):
     """Admin can update patient profile information."""
-    from model.models import FoodLog, ExerciseLog
-    
     # Verify user exists
     user_result = await session.execute(select(User).where(User.id == user_id))
     user = user_result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Get or create profile
+    # Get profile
     profile_result = await session.execute(
         select(PatientProfile).where(PatientProfile.user_id == user_id)
     )
@@ -513,67 +631,5 @@ async def admin_update_patient_profile(
     # Use existing update function
     await update_patient_profile(session, profile, data)
 
-    # Fetch complete patient detail to return
-    scores_result = await session.execute(
-        select(SpentNafScore)
-        .where(SpentNafScore.user_id == user_id)
-        .order_by(SpentNafScore.submitted_at.desc())
-    )
-    scores = scores_result.scalars().all()
-
-    blood_result = await session.execute(
-        select(BloodTest)
-        .where(BloodTest.user_id == user_id)
-        .order_by(BloodTest.recorded_at.desc())
-    )
-    blood_tests = blood_result.scalars().all()
-
-    food_result = await session.execute(
-        select(FoodLog)
-        .where(FoodLog.user_id == user_id)
-        .order_by(FoodLog.eaten_date.desc(), FoodLog.created_at.desc())
-        .limit(200)
-    )
-    food_logs = food_result.scalars().all()
-
-    exercise_result = await session.execute(
-        select(ExerciseLog)
-        .where(ExerciseLog.user_id == user_id)
-        .order_by(ExerciseLog.logged_date.desc(), ExerciseLog.created_at.desc())
-        .limit(100)
-    )
-    exercise_logs = exercise_result.scalars().all()
-
-    # Refresh profile to get updated BMI
-    await session.refresh(profile)
-
-    # Lab history and config
-    lab_history = await get_lab_history(session, user_id)
-    lab_config = await get_lab_config(session)
-
-    return PatientDetail(
-        user_id=user.id,
-        line_user_id=user.line_user_id,
-        display_name=user.display_name,
-        picture_url=user.picture_url,
-        first_name=profile.first_name,
-        last_name=profile.last_name,
-        age=profile.age,
-        gender=profile.gender,
-        phone=profile.phone,
-        height=profile.height,
-        weight=profile.weight,
-        bmi=round(profile.bmi, 2) if profile.bmi else None,
-        blood_pressure=profile.blood_pressure,
-        existing_diseases=profile.existing_diseases,
-        smoking=profile.smoking,
-        alcohol=profile.alcohol,
-        urine_amount=profile.urine_amount,
-        daily_setup=DailySetupRead.model_validate(daily, from_attributes=True) if (daily := await get_daily_setup(session, user_id, datetime.now(timezone.utc).strftime("%Y-%m-%d"))) else None,
-        spent_naf_history=[SpentNafSummary.model_validate(s, from_attributes=True) for s in scores],
-        blood_test_history=[BloodTestSummary.model_validate(b, from_attributes=True) for b in blood_tests],
-        food_log_history=[FoodLogEntry.model_validate(f, from_attributes=True) for f in food_logs],
-        exercise_log_history=[ExerciseLogEntry.model_validate(e, from_attributes=True) for e in exercise_logs],
-        lab_history=[LabRecordRead.model_validate(lr, from_attributes=True) for lr in lab_history],
-        lab_config=[LabCategoryRead.model_validate(lc, from_attributes=True) for lc in lab_config]
-    )
+    # Return refreshed complete detail
+    return await _get_patient_detail(session, user_id)

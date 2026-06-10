@@ -25,7 +25,7 @@ class PatientProfileBase(BaseModel):
 
 
 class PatientProfileCreate(PatientProfileBase):
-    pass
+    line_user_id: Optional[str] = None
 
 
 class PatientProfileUpdate(BaseModel):
