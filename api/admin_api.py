@@ -34,6 +34,7 @@ from schema.food_log_schema import (
 from crud.food_log_crud import get_daily_setup
 import secrets
 import hashlib
+import uuid
 from crud.patient_crud import update_patient_profile, create_patient_profile
 from crud.crud_user import get_user_by_line_id, create_user
 from crud.spent_naf_crud import (
@@ -315,13 +316,15 @@ async def admin_create_patient(
     session: AsyncSession = Depends(get_session),
     _: str = Depends(verify_token),
 ):
-    if not payload.line_user_id:
-        raise HTTPException(status_code=400, detail="lineUserId is required for admin-led creation")
+    line_user_id = payload.line_user_id
+    if not line_user_id:
+        # Generate placeholder for patients without LINE/smartphone
+        line_user_id = f"OFFLINE_{uuid.uuid4().hex[:12]}"
 
     # Ensure user exists
-    user = await get_user_by_line_id(session, payload.line_user_id)
+    user = await get_user_by_line_id(session, line_user_id)
     if not user:
-        user = await create_user(session, UserCreate(line_user_id=payload.line_user_id))
+        user = await create_user(session, UserCreate(line_user_id=line_user_id))
 
     # Check if profile already exists
     profile_result = await session.execute(
