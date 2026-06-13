@@ -29,9 +29,14 @@ from schema.nutrition_schema import NutritionTargets
 from schema.food_log_schema import (
     FoodLogEntry, ExerciseLogEntry, DailySetupRead,
     FoodDatabaseCreate, FoodDatabaseUpdate, FoodDatabaseRead,
-    ExerciseDatabaseCreate, ExerciseDatabaseUpdate, ExerciseDatabaseRead
+    ExerciseDatabaseCreate, ExerciseDatabaseUpdate, ExerciseDatabaseRead,
+    FoodLogCreate, FoodLogUpdate, ExerciseLogCreate, DailySetupUpdate
 )
-from crud.food_log_crud import get_daily_setup
+from crud.food_log_crud import (
+    get_daily_setup, update_daily_setup,
+    add_food_log, get_food_logs_by_date, update_food_log, delete_food_log,
+    add_exercise_log, get_exercise_logs_by_date, delete_exercise_log
+)
 import secrets
 import hashlib
 import uuid
@@ -468,6 +473,64 @@ async def admin_delete_food_database(
     await session.commit()
 
 
+# --- Admin Patient Log Management --------------------------------------------
+
+@router.get("/patients/{user_id}/food/{date}", response_model=List[FoodLogEntry])
+async def admin_get_patient_food_log_by_date(
+    user_id: int,
+    date: str,
+    session: AsyncSession = Depends(get_session),
+    _: str = Depends(verify_token),
+):
+    """Admin can fetch food logs for a patient on a specific date."""
+    logs = await get_food_logs_by_date(session, user_id, date)
+    return [FoodLogEntry.model_validate(log, from_attributes=True) for log in logs]
+
+
+@router.post("/patients/{user_id}/food", response_model=FoodLogEntry)
+async def admin_log_patient_food(
+    user_id: int,
+    payload: FoodLogCreate,
+    session: AsyncSession = Depends(get_session),
+    _: str = Depends(verify_token),
+):
+    """Admin can log a food entry for a patient."""
+    user_result = await session.execute(select(User).where(User.id == user_id))
+    if not user_result.scalar_one_or_none():
+        raise HTTPException(status_code=404, detail="User not found")
+
+    log = await add_food_log(session, user_id, payload)
+    return FoodLogEntry.model_validate(log, from_attributes=True)
+
+
+@router.put("/patients/{user_id}/food/{entry_id}", response_model=FoodLogEntry)
+async def admin_update_patient_food_log(
+    user_id: int,
+    entry_id: int,
+    payload: FoodLogUpdate,
+    session: AsyncSession = Depends(get_session),
+    _: str = Depends(verify_token),
+):
+    """Admin can update a specific food log entry for a patient."""
+    log = await update_food_log(session, entry_id, user_id, payload)
+    if not log:
+        raise HTTPException(status_code=404, detail="Food log entry not found")
+    return FoodLogEntry.model_validate(log, from_attributes=True)
+
+
+@router.delete("/patients/{user_id}/food/{entry_id}", status_code=204)
+async def admin_delete_patient_food_log(
+    user_id: int,
+    entry_id: int,
+    session: AsyncSession = Depends(get_session),
+    _: str = Depends(verify_token),
+):
+    """Admin can delete a specific food log entry for a patient."""
+    success = await delete_food_log(session, entry_id, user_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Food log entry not found")
+
+
 # --- Exercise Database Management (Admin) ------------------------------------
 
 @router.get("/exercise-database", response_model=List[ExerciseDatabaseRead])
@@ -532,6 +595,74 @@ async def admin_delete_exercise_database(
         raise HTTPException(status_code=404, detail="Exercise item not found")
     await session.delete(exercise)
     await session.commit()
+
+
+@router.get("/patients/{user_id}/exercise/{date}", response_model=List[ExerciseLogEntry])
+async def admin_get_patient_exercise_log_by_date(
+    user_id: int,
+    date: str,
+    session: AsyncSession = Depends(get_session),
+    _: str = Depends(verify_token),
+):
+    """Admin can fetch exercise logs for a patient on a specific date."""
+    logs = await get_exercise_logs_by_date(session, user_id, date)
+    return [ExerciseLogEntry.model_validate(log, from_attributes=True) for log in logs]
+
+
+@router.post("/patients/{user_id}/exercise", response_model=ExerciseLogEntry)
+async def admin_log_patient_exercise(
+    user_id: int,
+    payload: ExerciseLogCreate,
+    session: AsyncSession = Depends(get_session),
+    _: str = Depends(verify_token),
+):
+    """Admin can log an exercise entry for a patient."""
+    user_result = await session.execute(select(User).where(User.id == user_id))
+    if not user_result.scalar_one_or_none():
+        raise HTTPException(status_code=404, detail="User not found")
+
+    log = await add_exercise_log(session, user_id, payload)
+    return ExerciseLogEntry.model_validate(log, from_attributes=True)
+
+
+@router.delete("/patients/{user_id}/exercise/{entry_id}", status_code=204)
+async def admin_delete_patient_exercise_log(
+    user_id: int,
+    entry_id: int,
+    session: AsyncSession = Depends(get_session),
+    _: str = Depends(verify_token),
+):
+    """Admin can delete a specific exercise log entry for a patient."""
+    success = await delete_exercise_log(session, entry_id, user_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Exercise log entry not found")
+
+
+@router.get("/patients/{user_id}/setup/{date}", response_model=Optional[DailySetupRead])
+async def admin_get_patient_daily_setup(
+    user_id: int,
+    date: str,
+    session: AsyncSession = Depends(get_session),
+    _: str = Depends(verify_token),
+):
+    """Admin can fetch daily setup for a patient on a specific date."""
+    setup = await get_daily_setup(session, user_id, date)
+    if not setup:
+        raise HTTPException(status_code=404, detail="Daily setup not found")
+    return DailySetupRead.model_validate(setup, from_attributes=True)
+
+
+@router.put("/patients/{user_id}/setup/{date}", response_model=DailySetupRead)
+async def admin_update_patient_daily_setup(
+    user_id: int,
+    date: str,
+    payload: DailySetupUpdate,
+    session: AsyncSession = Depends(get_session),
+    _: str = Depends(verify_token),
+):
+    """Admin can update or create daily setup for a patient on a specific date."""
+    setup = await update_daily_setup(session, user_id, date, payload)
+    return DailySetupRead.model_validate(setup, from_attributes=True)
 
 
 # --- Blood test management for admin -----------------------------------------
