@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
-from typing import List, Dict
+from typing import List, Dict, Optional
 from datetime import datetime, timedelta, timezone
 from core.db import get_session
 from core.config import settings
